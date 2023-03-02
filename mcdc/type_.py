@@ -480,6 +480,7 @@ def make_type_technique(card):
         ("IC_generator", bool_),
         ("iQMC", bool_),
         ("weight_roulette", bool_),
+        ("residual", bool_)
     ]
 
     # =========================================================================

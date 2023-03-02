@@ -1016,6 +1016,31 @@ def IC_generator(N_neutron=0, N_precursor=0):
     card["IC_N_neutron"] = int(N_neutron)
     card["IC_N_precursor"] = int(N_precursor)
 
+def residual(
+    hi=None,
+    hj=None,
+    estimate=None,
+    fixed_source=None,
+    interior_integral=None,
+    face_integral=None,
+    interior_residual=None,
+    face_residual=None,
+    residual=None
+):
+    card = mcdc.input_card.technique
+    card["residual"] = True
+    card["residual_hi"] = hi
+    card["residual_hj"] = hj
+    card["residual_estimate"] = estimate
+    card["residual_fixed_source"] = fixed_source
+    card["residual_interior_integral"] = interior_integral
+    card["residual_face_integral"] = face_integral
+    card["residual_face_residual"] = face_residual
+    card["residual_interior_integral"] = interior_residual
+    card["residual_source"] = residual
+
+    return
+
 
 def iQMC(
     g=None,

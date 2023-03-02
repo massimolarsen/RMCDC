@@ -29,6 +29,14 @@ def loop_main(mcdc):
             mcdc["technique"]["iqmc_flux"] = np.zeros_like(
                 mcdc["technique"]["iqmc_flux"]
             )
+
+        if mcdc["technique"]["residual"]:
+            # reset particle bank size
+            mcdc["bank_source"]["size"] = 0
+            kernel.prepare_rmc_source(mcdc)
+            kernel.prepare_rmc_particles(mcdc)
+            ################### iterate here, simulation_end = true when done ###################
+
         # Loop over source particles
         loop_source(mcdc)
 
