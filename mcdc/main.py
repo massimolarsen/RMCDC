@@ -399,6 +399,7 @@ def generate_hdf5():
             for name in T["score"].dtype.names:
                 if mcdc["tally"][name]:
                     name_h5 = name.replace("_", "-")
+                    data=np.squeeze(T["score"][name]["mean"])
                     f.create_dataset(
                         "tally/" + name_h5 + "/mean",
                         data=np.squeeze(T["score"][name]["mean"]),

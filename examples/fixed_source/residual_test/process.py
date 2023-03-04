@@ -25,20 +25,20 @@ J = len(x_mid)
 
 with h5py.File("output.h5", "r") as f:
     phi = f["tally/flux/mean"][:]
+    print(phi)
     phi_sd = f["tally/flux/sdev"][:]
     phi_x = f["tally/flux-x/mean"][:]
     phi_x_sd = f["tally/flux-x/sdev"][:]
-for k in range(K):
-    phi[k] /= dx * dt[k]
-    phi_sd[k] /= dx * dt[k]
-    phi_x[k] /= dt[k]
-    phi_x_sd[k] /= dt[k]
 
+phi = np.sum(phi, axis=1)
+
+
+plt.plot(phi)
 
 # Flux - average
 fig = plt.figure()
 ax = plt.axes(
-    xlim=(-21.889999999999997, 21.89), ylim=(-0.042992644459595206, 0.9028455336514992)
+    xlim=(0, 1), ylim=(0, 2)
 )
 ax.grid()
 ax.set_xlabel(r"$x$")
@@ -54,7 +54,7 @@ plt.show()
 # Flux - x
 fig = plt.figure()
 ax = plt.axes(
-    xlim=(-21.889999999999997, 21.89), ylim=(-0.042992644459595206, 0.9028455336514992)
+    xlim=(0, 1), ylim=(0, 2)
 )
 ax.grid()
 ax.set_xlabel(r"$x$")

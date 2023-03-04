@@ -2842,7 +2842,7 @@ def prepare_rmc_source(mcdc):
             mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi)
             mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, mu)
             mcdc["technique"]["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi)
-            mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hi, psi, psi1, mu)
+            mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hj, psi, psi1, mu)
             mcdc["technique"]["residual_source"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
 
 @njit
@@ -2858,32 +2858,37 @@ def prepare_rmc_particles(mcdc):
     rfi = mcdc["technique"]["residual_face_integral"]
     residual = mcdc["technique"]["residual_source"]
 
+
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual.shape)))
     rL1 = (residual / np.sum(residual)).flatten()
     for i in range(1,len(rL1)):
                 rL1[i] += rL1[i-1]
 
-    # sample random cell with binary search
-    eta = np.random.random()
-    index = binary_search(eta, rL1)
-    cell_x = indices[index][0]
-    cell_mu = indices[index][1]
-    # get cell center values for x and mu
-    xi = x_mesh[cell_x]
-    muj = mu_mesh[cell_mu]
-
-    # check if interior or face
-    eta = np.random.random()
-    if eta < rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu]):
-        face = True
-    else:
-        face = False
-
-    # sampled location and angle
+    
     for n in range(N_particle):
         # create new particle
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
+        P_new["w"] = 1
+
+        # sample random cell with binary search
+        eta = np.random.random()
+        index = binary_search(eta, rL1)
+        cell_x = indices[index][0]
+        cell_mu = indices[index][1]
+
+        # get cell center values for x and mu
+        xi = x_mesh[cell_x] + hi/2
+        muj = mu_mesh[cell_mu] + hj/2
+
+        # check if interior or face
+        eta = np.random.random()
+        if eta < rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu]):
+            face = True
+        else:
+            face = False
+        
+        # sampled location and angle
         if face: # face sampling
             # location ????????????
             if muj > 0:
@@ -2908,7 +2913,7 @@ def prepare_rmc_particles(mcdc):
             if mcdc["technique"]["residual_interior_residual"][cell_x,cell_mu] < 0:
                 P_new["w"] = -1
 
-    add_particle(P_new, mcdc["bank_source"])
+        add_particle(P_new, mcdc["bank_source"])
     return
 
 # =============================================================================
