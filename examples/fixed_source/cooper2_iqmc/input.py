@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+sys.path.append('C:/users/larse/source/repos/RMCDC')
 import mcdc
 
 

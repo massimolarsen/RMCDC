@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from mpi4py import MPI
 from numba import njit, objmode, literal_unroll
@@ -2787,17 +2788,15 @@ def calculate_face_residual(psi, psi1, mu):
 @njit
 def get_cell(x, mu, mcdc):
     cells = mcdc["cells"]
-    if mu < 0:
-        for cell_ID in range(len(cells)):
-            cell = mcdc["cells"][cell_ID]
-            surfaces = cell["surface_IDs"]
-            if x > surfaces[1] & x <= surfaces[0]:
+
+    for cell_ID in range(len(cells)):
+        cell = mcdc["cells"][cell_ID]
+        surfaces = cell["surface_IDs"]
+        if mu < 0:
+            if x > surfaces[1] and x <= surfaces[0]:
                 return cell["ID"]
-    else:
-         for cell_ID in range(len(cells)):
-            cell = mcdc["cells"][cell_ID]
-            surfaces = cell["surface_IDs"]
-            if x >= surfaces[1] & x < surfaces[0]:
+        else:
+            if x >= surfaces[1] and x < surfaces[0]:
                 return cell["ID"]
 
 @njit
@@ -2805,22 +2804,31 @@ def prepare_rmc_source(mcdc):
     hi = mcdc["technique"]["residual_hi"]
     hj = mcdc["technique"]["residual_hj"]
     tally = mcdc["tally"]
-    x_mesh = tally["x"]
-    mu_mesh = tally["mu"]
+    x_mesh = tally["mesh"]["x"]
+    mu_mesh = tally["mesh"]["mu"]
     residual_estimate = mcdc["technique"]["residual_estimate"]
 
-    for i in range(len(x_mesh)):
-        for j in range(len(mu_mesh)):
-            mu = mu_mesh[j]
+    for i in range(len(x_mesh) - 1):
+        x = x_mesh[i] + hi/2
+        
+        for j in range(len(mu_mesh) - 1):
+            psi1 = 0
+            mu = mu_mesh[j] + hj/2
             # get psi
             psi = residual_estimate[i,j]
             if mu < 0:
-                psi1 = residual_estimate[i+1,j]
+                if i < len(x_mesh) - 2:
+                    psi1 = residual_estimate[i+1,j]
+                else:
+                    psi1 = 0
             else:
-                psi1 = residual_estimate[i-1,j] 
+                if i > 0:
+                    psi1 = residual_estimate[i-1,j]
+                else:
+                    psi1 = 0 
 
             # get cross sections
-            cell_ID = get_cell(x_mesh, mu_mesh, mcdc)
+            cell_ID = get_cell(x, mu, mcdc)
             cell = mcdc["cells"][cell_ID]
             material_ID = cell["material_ID"]
             material = mcdc["materials"][material_ID]
@@ -2828,14 +2836,14 @@ def prepare_rmc_source(mcdc):
             SigmaT = material["total"]
 
             # get source
-            Q = mcdc["technique"]["fixed_source"][i,j]
+            Q = mcdc["technique"]["residual_fixed_source"][i,j]
 
             # calculate residuals and integrals
-            mcdc["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi)
-            mcdc["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, mu)
-            mcdc["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi)
-            mcdc["residual_face_integral"][i,j] = calculate_face_integral(hi, psi, psi1, mu)
-            mcdc["residual_source"][i,j] = mcdc["residual_interior_integral"][i,j] + mcdc["residual_face_integral"][i,j]
+            mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi)
+            mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, mu)
+            mcdc["technique"]["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi)
+            mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hi, psi, psi1, mu)
+            mcdc["technique"]["residual_source"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
 
 @njit
 def prepare_rmc_particles(mcdc):
@@ -2843,31 +2851,31 @@ def prepare_rmc_particles(mcdc):
     hi = mcdc["technique"]["residual_hi"]
     hj = mcdc["technique"]["residual_hj"]
     tally = mcdc["tally"]
-    x_mesh = tally["x"]
-    mu_mesh = tally["mu"]
+    x_mesh = tally["mesh"]["x"]
+    mu_mesh = tally["mesh"]["mu"]
     N_particle = mcdc["setting"]["N_particle"]
-    rii = mcdc["residual_interior_integral"]
-    rfi = mcdc["residual_face_integral"]
-    residual = mcdc["residual_source"]
+    rii = mcdc["technique"]["residual_interior_integral"]
+    rfi = mcdc["technique"]["residual_face_integral"]
+    residual = mcdc["technique"]["residual_source"]
 
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual.shape)))
-    residual.flatten()
-    rL1 = residual / np.sum(residual)
+    rL1 = (residual / np.sum(residual)).flatten()
     for i in range(1,len(rL1)):
                 rL1[i] += rL1[i-1]
 
     # sample random cell with binary search
     eta = np.random.random()
     index = binary_search(eta, rL1)
-    cell = indices[index]
+    cell_x = indices[index][0]
+    cell_mu = indices[index][1]
     # get cell center values for x and mu
-    xi = x_mesh[cell[0]]
-    muj = mu_mesh[cell[1]]
+    xi = x_mesh[cell_x]
+    muj = mu_mesh[cell_mu]
 
     # check if interior or face
     eta = np.random.random()
-    if eta < rfi[cell]/(rii[cell]+rfi[cell]):
+    if eta < rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu]):
         face = True
     else:
         face = False
@@ -2886,7 +2894,7 @@ def prepare_rmc_particles(mcdc):
             eta = np.random.random()
             P_new["ux"] = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2))
             # assign weight
-            if  mcdc["residual_face_residual"][cell] < 0:
+            if  mcdc["technique"]["residual_face_residual"][cell_x,cell_mu] < 0:
                 P_new["w"] = -1
 
         else: # interior sampling
@@ -2897,7 +2905,7 @@ def prepare_rmc_particles(mcdc):
             eta = np.random.random()
             P_new["ux"] = eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)
             # assign particle weight
-            if mcdc["residual_interior_residual"][cell] < 0:
+            if mcdc["technique"]["residual_interior_residual"][cell_x,cell_mu] < 0:
                 P_new["w"] = -1
 
     add_particle(P_new, mcdc["bank_source"])

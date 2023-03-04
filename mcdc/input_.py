@@ -1025,7 +1025,7 @@ def residual(
     face_integral=None,
     interior_residual=None,
     face_residual=None,
-    residual=None
+    residual_source=None
 ):
     card = mcdc.input_card.technique
     card["residual"] = True
@@ -1036,8 +1036,8 @@ def residual(
     card["residual_interior_integral"] = interior_integral
     card["residual_face_integral"] = face_integral
     card["residual_face_residual"] = face_residual
-    card["residual_interior_integral"] = interior_residual
-    card["residual_source"] = residual
+    card["residual_interior_residual"] = interior_residual
+    card["residual_source"] = residual_source
 
     return
 

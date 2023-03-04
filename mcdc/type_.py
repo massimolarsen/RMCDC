@@ -548,6 +548,25 @@ def make_type_technique(card):
         ("iqmc_generator", "U30"),
     ]
 
+
+    # =========================================================================
+    # Quasi Monte Carlo
+    # =========================================================================
+    mesh, Nx, Ny, Nz, Nt, Nmu, N_azi = make_type_mesh(card.tally["mesh"])
+
+    struct += [
+        ("residual_hi", float64),
+        ("residual_hj", float64),
+        ("residual_estimate", float64, (Nx, Nmu)),
+        ("residual_fixed_source", float64, (Nx, Nmu)),
+        ("residual_interior_integral", float64, (Nx, Nmu)),
+        ("residual_face_integral", float64, (Nx, Nmu)),
+        ("residual_face_residual", float64, (Nx, Nmu)),
+        ("residual_interior_residual", float64, (Nx, Nmu)),
+        ("residual_source", float64, (Nx, Nmu))
+    ]
+
+
     # =========================================================================
     # Time census
     # =========================================================================
@@ -634,7 +653,7 @@ def make_type_global(card):
         bank_source = particle_bank(0)
 
     # TODO
-    if card.setting["filed_source"] or card.technique["iQMC"]:
+    if card.setting["filed_source"] or card.technique["iQMC"] or card.technique["residual"]:
         bank_source = particle_bank(N_work)
 
     # GLobal type
