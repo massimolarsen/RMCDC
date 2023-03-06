@@ -2897,9 +2897,9 @@ def prepare_rmc_particles(mcdc):
                 P_new["x"] = xi - hi/2
             # angle
             eta = np.random.random()
-            P_new["ux"] = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2))
+            P_new["ux"] = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
             # assign weight
-            if  mcdc["technique"]["residual_face_residual"][cell_x,cell_mu] < 0:
+            if  mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
                 P_new["w"] = -1
 
         else: # interior sampling
@@ -2908,9 +2908,9 @@ def prepare_rmc_particles(mcdc):
             P_new["x"] = xi + hi*(eta-1/2)
             # angle
             eta = np.random.random()
-            P_new["ux"] = eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)
+            P_new["ux"] = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
             # assign particle weight
-            if mcdc["technique"]["residual_interior_residual"][cell_x,cell_mu] < 0:
+            if mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
                 P_new["w"] = -1
 
         add_particle(P_new, mcdc["bank_source"])

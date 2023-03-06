@@ -1,5 +1,5 @@
 import numpy as np
-
+import h5py
 import sys
 sys.path.append('C:/users/larse/source/repos/RMCDC')
 import mcdc
@@ -13,8 +13,8 @@ import mcdc
 
 # Set materials
 m = mcdc.material(
-    capture=np.array([1.0 / 2.0]),
-    scatter=np.array([[1.0 / 2.0]])
+    capture=np.array([99.0/100.0]),
+    scatter=np.array([[1.0/100.0]])
 )
 
 # Set surfaces
@@ -28,8 +28,8 @@ mcdc.cell([+s1, -s2], m)
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nx = 10
-Nmu = 10
+Nx = 20
+Nmu = 20
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
@@ -44,7 +44,11 @@ mcdc.tally(
 
 hi = 1.0 / Nx
 hj = 2.0 / Nmu
-estimate = np.zeros([Nx, Nmu])
+#estimate = np.ones([Nx, Nmu])
+
+with h5py.File("rmc1e6noestimate.h5", "r") as f:
+    estimate = f["tally/flux/mean"][:]
+
 fixed_source = np.ones([Nx, Nmu])
 interior_integral = np.zeros_like(estimate)
 face_integral = np.zeros_like(estimate)
@@ -65,7 +69,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e5)
+mcdc.setting(N_particle=1e6)
 
 # Run
 mcdc.run()
