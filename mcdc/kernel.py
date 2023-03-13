@@ -2832,8 +2832,8 @@ def prepare_rmc_source(mcdc):
             cell = mcdc["cells"][cell_ID]
             material_ID = cell["material_ID"]
             material = mcdc["materials"][material_ID]
-            SigmaS = material["scatter"]
-            SigmaT = material["total"]
+            SigmaS = material["scatter"][0][0]
+            SigmaT = material["total"][0][0]
 
             # get source
             Q = mcdc["technique"]["residual_fixed_source"][i,j]
@@ -2857,25 +2857,26 @@ def prepare_rmc_particles(mcdc):
     rii = mcdc["technique"]["residual_interior_integral"]
     rfi = mcdc["technique"]["residual_face_integral"]
     residual = mcdc["technique"]["residual_source"]
+    Q = mcdc["technique"]["residual_fixed_source"]
 
 
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual.shape)))
     rL1 = (residual / np.sum(residual)).flatten()
     for i in range(1,len(rL1)):
-                rL1[i] += rL1[i-1]
+        rL1[i] += rL1[i-1]
 
     
     for n in range(N_particle):
-        # create new particle
-        P_new = np.zeros(1, dtype=type_.particle_record)[0]
-        P_new["w"] = 1
-
         # sample random cell with binary search
         eta = np.random.random()
         index = binary_search(eta, rL1)
         cell_x = indices[index][0]
         cell_mu = indices[index][1]
+
+        # create new particle with weight of flux in the cell
+        P_new = np.zeros(1, dtype=type_.particle_record)[0]
+        P_new["w"] = 1 * Q[cell_x, cell_mu]
 
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
@@ -2900,7 +2901,7 @@ def prepare_rmc_particles(mcdc):
             P_new["ux"] = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
             # assign weight
             if  mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
-                P_new["w"] = -1
+                P_new["w"] = -1 * P_new["w"]
 
         else: # interior sampling
             # location
@@ -2911,7 +2912,7 @@ def prepare_rmc_particles(mcdc):
             P_new["ux"] = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
             # assign particle weight
             if mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
-                P_new["w"] = -1
+                P_new["w"] = -1 * P_new["w"]
 
         add_particle(P_new, mcdc["bank_source"])
     return

@@ -12,24 +12,31 @@ import mcdc
 # Effective scattering ratio c = 1.1
 
 # Set materials
-m = mcdc.material(
+m1 = mcdc.material(
     capture=np.array([99.0/100.0]),
     scatter=np.array([[1.0/100.0]])
 )
 
+m2 = mcdc.material(
+    capture=np.array([10.0/10.0]),
+    scatter=np.array([[0/10.0]])
+)
+
 # Set surfaces
-s1 = mcdc.surface("plane-x", x=0, bc="vacuum")
+s1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
 s2 = mcdc.surface("plane-x", x=1.0, bc="vacuum")
+#s3 = mcdc.surface("plane-x", x=2.0, bc="reflective")
 
 # Set cells
-mcdc.cell([+s1, -s2], m)
+mcdc.cell([+s1, -s2], m1)
+#mcdc.cell([+s2, -s3], m2)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
 # =============================================================================
 
 Nx = 20
-Nmu = 20
+Nmu = 4
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
@@ -44,17 +51,21 @@ mcdc.tally(
 
 hi = 1.0 / Nx
 hj = 2.0 / Nmu
-#estimate = np.ones([Nx, Nmu])
+estimate = np.zeros([Nx, Nmu])
 
-with h5py.File("rmc1e6noestimate.h5", "r") as f:
-    estimate = f["tally/flux/mean"][:]
+#with h5py.File("rmc1e6noestimate.h5", "r") as f:
+    #estimate = f["tally/flux/mean"][:]
 
+#fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
+#fixed_source[0,0] = Nx*Nmu
+#fixed_source[0,1] = Nx*Nmu
 fixed_source = np.ones([Nx, Nmu])
-interior_integral = np.zeros_like(estimate)
-face_integral = np.zeros_like(estimate)
-interior_residual = np.zeros_like(estimate)
-face_residual = np.zeros_like(estimate)
-residual_source = np.zeros_like(estimate)
+
+interior_integral = np.zeros_like(fixed_source)
+face_integral = np.zeros_like(fixed_source)
+interior_residual = np.zeros_like(fixed_source)
+face_residual = np.zeros_like(fixed_source)
+residual_source = np.zeros_like(fixed_source)
 
 mcdc.residual(
     hi=hi,
@@ -69,7 +80,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e6)
+mcdc.setting(N_particle=1e5)
 
 # Run
 mcdc.run()
