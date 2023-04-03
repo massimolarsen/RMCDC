@@ -36,7 +36,7 @@ mcdc.cell([+s1, -s2], m1)
 # =============================================================================
 
 Nx = 20
-Nmu = 4
+Nmu = 2
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
@@ -56,6 +56,9 @@ estimate = np.zeros([Nx, Nmu])
 #with h5py.File("rmc1e6noestimate.h5", "r") as f:
     #estimate = f["tally/flux/mean"][:]
 
+#with h5py.File("output.h5", "r") as f:
+    #estimate = f["tally/flux/mean"][:]
+
 #fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
 #fixed_source[0,0] = Nx*Nmu
 #fixed_source[0,1] = Nx*Nmu
@@ -67,6 +70,8 @@ interior_residual = np.zeros_like(fixed_source)
 face_residual = np.zeros_like(fixed_source)
 residual_source = np.zeros_like(fixed_source)
 
+exponential_convergence = True
+
 mcdc.residual(
     hi=hi,
     hj=hj,
@@ -76,11 +81,12 @@ mcdc.residual(
     face_integral=face_integral,
     interior_residual=interior_residual,
     face_residual=face_residual,
-    residual_source=residual_source
+    residual_source=residual_source,
+    exponential_convergence=exponential_convergence
 )
 
 # Setting
-mcdc.setting(N_particle=1e5)
+mcdc.setting(N_particle=1e4)
 
 # Run
 mcdc.run()

@@ -163,7 +163,6 @@ def print_bank(bank, show_content=False):
             print(" ", particles[i])
     print("\n")
 
-
 @nb.njit
 def print_progress_iqmc(mcdc):
     # TODO: function was not working with numba when structured like the
@@ -175,4 +174,17 @@ def print_progress_iqmc(mcdc):
             print("\n*******************************")
             print("Iteration ", itt)
             print("Residual ", res)
+            print("*******************************\n")
+
+@nb.njit
+def print_progress_residual(mcdc):
+    # TODO: function was not working with numba when structured like the
+    # other print_progress functions
+    if master:
+        if mcdc["setting"]["progress_bar"]:
+            itt = mcdc["technique"]["residual_itt"]
+            error = mcdc["technique"]["residual_error"]
+            print("\n*******************************")
+            print("Iteration: ", itt)
+            print("Error: ", error)
             print("*******************************\n")

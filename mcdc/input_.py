@@ -1025,7 +1025,12 @@ def residual(
     face_integral=None,
     interior_residual=None,
     face_residual=None,
-    residual_source=None
+    residual_source=None,
+    exponential_convergence=False,
+    maxitt = 20,
+    tol = 1e-6,
+    itt = 0,
+    error = 0.0
 ):
     card = mcdc.input_card.technique
     card["residual"] = True
@@ -1039,6 +1044,11 @@ def residual(
     card["residual_interior_residual"] = interior_residual
     card["residual_source"] = residual_source
 
+    card["exponential_convergence"] = exponential_convergence
+    card["residual_maxitt"] = maxitt
+    card["residual_tol"] = tol
+    card["residual_itt"] = itt
+    card["residual_error"] = error
     return
 
 

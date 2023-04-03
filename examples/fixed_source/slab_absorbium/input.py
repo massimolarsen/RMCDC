@@ -1,5 +1,6 @@
 import numpy as np
-
+import sys
+sys.path.append('C:/users/larse/source/repos/RMCDC')
 import mcdc
 
 # =============================================================================
@@ -8,27 +9,25 @@ import mcdc
 # Three slab layers with different purely-absorbing materials
 
 # Set materials
-m1 = mcdc.material(capture=np.array([1.0]))
-m2 = mcdc.material(capture=np.array([1.5]))
-m3 = mcdc.material(capture=np.array([2.0]))
+m1 = mcdc.material(capture=np.array([2.0]))
+m2 = mcdc.material(capture=np.array([1.0]))
+m3 = mcdc.material(capture=np.array([1.0]))
 
 # Set surfaces
-s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=2.0)
-s3 = mcdc.surface("plane-z", z=4.0)
-s4 = mcdc.surface("plane-z", z=6.0, bc="vacuum")
+s1 = mcdc.surface("plane-z", z=0.0, bc="reflective")
+s2 = mcdc.surface("plane-z", z=2.5)
+s3 = mcdc.surface("plane-z", z=5.0, bc="reflective")
 
 # Set cells
-mcdc.cell([+s1, -s2], m2)
-mcdc.cell([+s2, -s3], m3)
-mcdc.cell([+s3, -s4], m1)
+mcdc.cell([+s1, -s2], m1)
+mcdc.cell([+s2, -s3], m2)
 
 # =============================================================================
 # Set source
 # =============================================================================
 # Uniform isotropic source throughout the domain
 
-mcdc.source(z=[0.0, 6.0], isotropic=True)
+mcdc.source(z=[0.0, 5.0], isotropic=True)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
@@ -37,12 +36,12 @@ mcdc.source(z=[0.0, 6.0], isotropic=True)
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux", "current", "flux-z", "current-z"],
-    z=np.linspace(0.0, 6.0, 61),
+    z=np.linspace(0.0, 5.0, 21),
     mu=np.linspace(-1.0, 1.0, 32 + 1),
 )
 
 # Setting
-mcdc.setting(N_particle=1e5)
+mcdc.setting(N_particle=1e4)
 
 # Run
 mcdc.run()

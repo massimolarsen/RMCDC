@@ -2766,6 +2766,13 @@ def sample_qmc_group(sample, G):
 # ==============================================================================
 
 @njit
+def calculate_residual_error(mcdc):
+    flux_old = mcdc["technique"]["residual_estimate"]
+    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/1e4
+    error = np.linalg.norm((flux_new - flux_old))
+    mcdc["technique"]["residual_error"] = error
+
+@njit
 def calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi):
     r = hi * hj * abs(Q + SigmaS/(4*np.pi)*psi - SigmaT*psi)
     return r

@@ -550,10 +550,11 @@ def make_type_technique(card):
 
 
     # =========================================================================
-    # Quasi Monte Carlo
+    # Residual Monte Carlo
     # =========================================================================
     mesh, Nx, Ny, Nz, Nt, Nmu, N_azi = make_type_mesh(card.tally["mesh"])
 
+    # Residuals and Sources
     struct += [
         ("residual_hi", float64),
         ("residual_hj", float64),
@@ -564,6 +565,15 @@ def make_type_technique(card):
         ("residual_face_residual", float64, (Nx, Nmu)),
         ("residual_interior_residual", float64, (Nx, Nmu)),
         ("residual_source", float64, (Nx, Nmu))
+    ]
+
+    # Exponential convergence
+    struct += [
+        ("exponential_convergence", bool_),
+        ("residual_maxitt", int64),
+        ("residual_itt", int64),
+        ("residual_tol", float64),
+        ("residual_error", float64)
     ]
 
 

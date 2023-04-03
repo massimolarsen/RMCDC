@@ -46,7 +46,7 @@ phi2 = np.sum(phi2, axis=1)
 phi3 = np.sum(phi3, axis=1)
 #print(phi2)
 
-x= np.linspace(0,1,100)
+x= np.linspace(0,1,20)
 
 #plt.plot(x, phi, label="RMC with no estimate")
 plt.step(x, phi, where="mid", label="RMC with estimate") 

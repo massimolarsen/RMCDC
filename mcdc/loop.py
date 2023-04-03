@@ -5,7 +5,7 @@ from numba import njit, objmode
 import mcdc.kernel as kernel
 
 from mcdc.constant import *
-from mcdc.print_ import print_progress, print_progress_eigenvalue, print_progress_iqmc
+from mcdc.print_ import print_progress, print_progress_eigenvalue, print_progress_iqmc, print_progress_residual
 
 
 # =========================================================================
@@ -33,10 +33,15 @@ def loop_main(mcdc):
         if mcdc["technique"]["residual"]:
             # reset particle bank size
             mcdc["bank_source"]["size"] = 0
-            kernel.prepare_rmc_source(mcdc)
-            kernel.prepare_rmc_particles(mcdc)
-            ################### iterate here, simulation_end = true when done ###################
 
+            # prepare initial source
+            kernel.prepare_rmc_source(mcdc) 
+            kernel.prepare_rmc_particles(mcdc)
+
+            # reset flux
+            mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
+                mcdc["tally"]["score"]["flux"]["mean"]
+            )
         # Loop over source particles
         loop_source(mcdc)
 
@@ -75,6 +80,24 @@ def loop_main(mcdc):
             print_progress_iqmc(mcdc)
             # set flux_old = current flux
             mcdc["technique"]["iqmc_flux_old"] = mcdc["technique"]["iqmc_flux"].copy()
+
+        # RMC exponential convergence iteration
+        elif mcdc["technique"]["exponential_convergence"]:
+            mcdc["technique"]["residual_itt"] += 1
+            # calculate error
+            kernel.calculate_residual_error(mcdc)
+            if (mcdc["technique"]["residual_itt"] == mcdc["technique"]["residual_maxitt"]) or (
+                mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]
+            ):
+                simulation_end = True
+
+            # Print progres
+            # with objmode():
+            print_progress_residual(mcdc)
+
+            # set residual estimate to current flux
+            mcdc["technique"]["residual_estimate"] = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/1e4
+
 
         # Time census closeout
         elif (
