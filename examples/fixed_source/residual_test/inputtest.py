@@ -12,13 +12,13 @@ import mcdc
 
 # Set materials
 m = mcdc.material(
-    capture=np.array([99.0/100.0]),
-    scatter=np.array([[1.0/100.0]])
+    capture=np.array([100.0/100.0]),
+    scatter=np.array([[0.0/100.0]])
 )
 
 # Set surfaces
 s1 = mcdc.surface("plane-x", x=0, bc="reflective")
-s2 = mcdc.surface("plane-x", x=1.0, bc="vacuum")
+s2 = mcdc.surface("plane-x", x=1.0, bc="reflective")
 
 # Set cells
 mcdc.cell([+s1, -s2], m)
@@ -37,7 +37,7 @@ mcdc.source(x=[0.0, 1.0], isotropic=True)
 # Tally: cell-average and cell-edge angular fluxes and currents
 
 Nx = 20
-Nmu = 4
+Nmu = 2
 
 mcdc.tally(
     scores=["flux", "flux-x"],

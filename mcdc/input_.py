@@ -1027,7 +1027,7 @@ def residual(
     face_residual=None,
     residual_source=None,
     exponential_convergence=False,
-    maxitt = 20,
+    maxitt = 10,
     tol = 1e-6,
     itt = 0,
     error = 0.0

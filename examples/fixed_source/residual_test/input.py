@@ -13,8 +13,8 @@ import mcdc
 
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([99.0/100.0]),
-    scatter=np.array([[1.0/100.0]])
+    capture=np.array([100.0/100.0]),
+    scatter=np.array([[0.0/100.0]])
 )
 
 m2 = mcdc.material(
@@ -23,8 +23,8 @@ m2 = mcdc.material(
 )
 
 # Set surfaces
-s1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-x", x=1.0, bc="vacuum")
+s1 = mcdc.surface("plane-x", x=0.0, bc="reflective")
+s2 = mcdc.surface("plane-x", x=1.0, bc="reflective")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="reflective")
 
 # Set cells
@@ -53,6 +53,7 @@ hi = 1.0 / Nx
 hj = 2.0 / Nmu
 estimate = np.zeros([Nx, Nmu])
 
+estimate = np.ones([Nx, Nmu]) * 2
 #with h5py.File("rmc1e6noestimate.h5", "r") as f:
     #estimate = f["tally/flux/mean"][:]
 

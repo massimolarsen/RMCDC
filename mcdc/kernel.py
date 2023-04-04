@@ -2767,10 +2767,17 @@ def sample_qmc_group(sample, G):
 
 @njit
 def calculate_residual_error(mcdc):
+    N_particle = mcdc["setting"]["N_particle"]
     flux_old = mcdc["technique"]["residual_estimate"]
-    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/1e4
+    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
     error = np.linalg.norm((flux_new - flux_old))
     mcdc["technique"]["residual_error"] = error
+
+def calculate_convergence_rate(mcdc):
+    N_particle = mcdc["setting"]["N_particle"]
+    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
+    
+
 
 @njit
 def calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi):
