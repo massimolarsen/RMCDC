@@ -86,6 +86,7 @@ def loop_main(mcdc):
             mcdc["technique"]["residual_itt"] += 1
             # calculate error
             kernel.calculate_residual_error(mcdc)
+            kernel.calculate_convergence_rate(mcdc)
             if (mcdc["technique"]["residual_itt"] == mcdc["technique"]["residual_maxitt"]) or (
                 mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]
             ):

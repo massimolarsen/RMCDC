@@ -26,8 +26,6 @@ J = len(x_mid)
 with h5py.File("output.h5", "r") as f:
     phi = f["tally/flux/mean"][:]
     phi_sd = f["tally/flux/sdev"][:]
-    phi_x = f["tally/flux-x/mean"][:]
-    phi_x_sd = f["tally/flux-x/sdev"][:]
 
 with h5py.File("rmc1e6estimate.h5", "r") as f:
     phi1 = f["tally/flux/mean"][:]
@@ -36,17 +34,17 @@ with h5py.File("rmc1e6noestimate.h5", "r") as f:
 with h5py.File("outputtest.h5", "r") as h:
     phi3 = h["tally/flux/mean"][:]
 
-#print(phi)
+print(phi)
 phi = np.sum(phi, axis=1)
-
-phi1 = np.sum(phi1, axis=1)
-#print(phi)
-phi2 = np.sum(phi2, axis=1)
 #print(phi1)
-phi3 = np.sum(phi3, axis=1)
+phi1 = np.sum(phi1, axis=1)
 #print(phi2)
+phi2 = np.sum(phi2, axis=1)
 
-x= np.linspace(0,1,20)
+phi3 = np.sum(phi3, axis=1)
+#print(phi3)
+
+x= np.linspace(0,1,2)
 
 #plt.plot(x, phi, label="RMC with no estimate")
 plt.step(x, phi, where="mid", label="RMC with estimate") 
