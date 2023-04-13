@@ -33,11 +33,9 @@ def loop_main(mcdc):
         if mcdc["technique"]["residual"]:
             # reset particle bank size
             mcdc["bank_source"]["size"] = 0
-
             # prepare initial source
             kernel.prepare_rmc_source(mcdc) 
             kernel.prepare_rmc_particles(mcdc)
-
             # reset flux
             mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
                 mcdc["tally"]["score"]["flux"]["mean"]
@@ -87,6 +85,7 @@ def loop_main(mcdc):
             # calculate error
             kernel.calculate_residual_error(mcdc)
             kernel.calculate_convergence_rate(mcdc)
+            print_progress_residual(mcdc)
             if (mcdc["technique"]["residual_itt"] == mcdc["technique"]["residual_maxitt"]) or (
                 mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]
             ):
@@ -94,7 +93,6 @@ def loop_main(mcdc):
 
             # Print progres
             # with objmode():
-            print_progress_residual(mcdc)
 
             # set residual estimate to current flux
             N_particle = mcdc["setting"]["N_particle"]

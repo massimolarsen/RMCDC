@@ -1177,7 +1177,7 @@ def mesh_get_angular_index(P, mesh):
     uy = P["uy"]
     uz = P["uz"]
 
-    P_mu = uz
+    P_mu = ux
     P_azi = math.acos(ux / math.sqrt(ux * ux + uy * uy))
     if uy < 0.0:
         P_azi *= -1
@@ -2782,14 +2782,15 @@ def calculate_convergence_rate(mcdc):
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
 
-    #error = np.linalg.norm((flux_new - flux_real))
+    error = np.linalg.norm((flux_new - flux_real))
 
-    error = abs((flux_new - flux_real)/flux_real) * 100
+    #error = abs((flux_new - flux_real)/flux_real) * 100
 
     #rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
 
+    print(flux_new)
+    print(np.sum(flux_new))
     print(error)
-    #print(rate)
 
 @njit
 def residual_isotropic_direction(mu, mcdc):
@@ -2831,10 +2832,10 @@ def get_cell(x, mu, mcdc):
         cell = mcdc["cells"][cell_ID]
         surfaces = cell["surface_IDs"]
         if mu < 0:
-            if x > surfaces[1] and x <= surfaces[0]:
+            if x > surfaces[0] and x <= surfaces[1]:
                 return cell["ID"]
         else:
-            if x >= surfaces[1] and x < surfaces[0]:
+            if x >= surfaces[0] and x < surfaces[1]:
                 return cell["ID"]
 
 @njit
@@ -2851,35 +2852,36 @@ def prepare_rmc_source(mcdc):
         phi = np.sum(residual_estimate[i,:])
         
         for j in range(len(mu_mesh) - 1):
-            psi1 = 0
             mu = mu_mesh[j] + hj/2
             # get psi
             psi = residual_estimate[i,j]
-            if mu < 0:
-                if i < len(x_mesh) - 2:
-                    psi1 = residual_estimate[i+1,j]
-                else:
-                    psi1 = 0
-            else:
+            if mu > 0:
                 if i > 0:
                     psi1 = residual_estimate[i-1,j]
                 else:
-                    psi1 = 0 
+                    psi1 = residual_estimate[i,0] 
+                    #psi1 = 0
+            else:
+                if i < len(x_mesh) - 2:
+                    psi1 = residual_estimate[i+1,j]
+                else:
+                    psi1 = residual_estimate[i,1]
+                    #psi1 = 0
 
             # get cross sections
             cell_ID = get_cell(x, mu, mcdc)
             cell = mcdc["cells"][cell_ID]
             material_ID = cell["material_ID"]
             material = mcdc["materials"][material_ID]
-            SigmaS = material["scatter"][0][0]
-            SigmaT = material["total"][0][0]
+            SigmaS = material["scatter"][0]
+            SigmaT = material["total"][0]
 
             # get source
             Q = mcdc["technique"]["residual_fixed_source"][i,j]
 
             # calculate residuals and integrals
-            #mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
-            #mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, mu)
+            mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
+            mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, mu)
             mcdc["technique"]["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi, phi)
             mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hj, psi, psi1, mu)
             mcdc["technique"]["residual_source"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
@@ -2895,20 +2897,21 @@ def prepare_rmc_particles(mcdc):
     N_particle = mcdc["setting"]["N_particle"]
     rii = mcdc["technique"]["residual_interior_integral"]
     rfi = mcdc["technique"]["residual_face_integral"]
-    residual = mcdc["technique"]["residual_source"]
+    residual = mcdc["technique"]["residual_interior_residual"] + mcdc["technique"]["residual_face_residual"]
+    residual_norm = mcdc["technique"]["residual_source"]
     Q = mcdc["technique"]["residual_fixed_source"]
 
 
     # get indices, flatten, and normalize for binary search
-    indices = np.array(list(np.ndindex(residual.shape)))
-    rL1 = (residual / np.sum(residual)).flatten()
+    indices = np.array(list(np.ndindex(residual_norm.shape)))
+    rL1 = (residual_norm / np.sum(residual_norm)).flatten()
+    rL1 = np.insert(rL1, 0, 0)
     for i in range(1,len(rL1)):
         rL1[i] += rL1[i-1]
-
     
     for n in range(N_particle):
         # sample random cell with binary search
-        eta = rng(mcdc)
+        eta = np.random.random()
         index = binary_search(eta, rL1)
         cell_x = indices[index][0]
         cell_mu = indices[index][1]
@@ -2922,7 +2925,7 @@ def prepare_rmc_particles(mcdc):
         muj = mu_mesh[cell_mu] + hj/2
 
         # check if interior or face
-        eta = rng(mcdc)
+        eta = np.random.random()
         if eta < rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu]):
             face = True
         else:
@@ -2930,27 +2933,26 @@ def prepare_rmc_particles(mcdc):
         
         # sampled location and angle
         if face: # face sampling
-            # location ????????????
             if muj > 0:
-                P_new["x"] = xi + hi/2
+                x = xi - hi/2
             else:
-                P_new["x"] = xi - hi/2
+                x = xi + hi/2
             # angle
-            eta = rng(mcdc)
+            eta = np.random.random()
             mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
             # assign weight
-            if  mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
+            if residual[cell_x,cell_mu] < 0:
                 P_new["w"] = -1 * P_new["w"]
 
         else: # interior sampling
             # location
-            eta = rng(mcdc)
-            P_new["x"] = xi + hi*(eta-1/2)
+            eta = np.random.random()
+            x = xi + hi*(eta-1/2)
             # angle
-            eta = rng(mcdc)
+            eta = np.random.random()
             mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
             # assign particle weight
-            if mcdc["technique"]["residual_source"][cell_x,cell_mu] < 0:
+            if residual[cell_x,cell_mu] < 0:
                 P_new["w"] = -1 * P_new["w"]
 
         # isotropic y and z direction using mu
@@ -2960,6 +2962,7 @@ def prepare_rmc_particles(mcdc):
 
         #P_new["ux"], P_new["uy"], P_new["uz"] = sample_isotropic_direction(mcdc)
         P_new["ux"] = mu
+        P_new["x"] = x
 
         add_particle(P_new, mcdc["bank_source"])
     return

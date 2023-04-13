@@ -36,6 +36,7 @@ with h5py.File("outputtest.h5", "r") as h:
 
 print(phi)
 phi = np.sum(phi, axis=1)
+print(np.sum(phi))
 #print(phi1)
 phi1 = np.sum(phi1, axis=1)
 #print(phi2)
@@ -44,7 +45,7 @@ phi2 = np.sum(phi2, axis=1)
 phi3 = np.sum(phi3, axis=1)
 #print(phi3)
 
-x= np.linspace(0,1,2)
+x= np.linspace(0,10,10)
 
 #plt.plot(x, phi, label="RMC with no estimate")
 plt.step(x, phi, where="mid", label="RMC with estimate") 

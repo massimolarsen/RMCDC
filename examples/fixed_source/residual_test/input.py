@@ -17,8 +17,8 @@ m1 = mcdc.material(
 )
 
 m2 = mcdc.material(
-    capture=np.array([10.0/10.0]),
-    scatter=np.array([[0/10.0]])
+    capture=np.array([9.0/10.0]),
+    scatter=np.array([[1.0/10.0]])
 )
 
 # Set surfaces
@@ -50,9 +50,13 @@ mcdc.tally(
 
 hi = 1.0 / Nx
 hj = 2.0 / Nmu
-#estimate = np.zeros([Nx, Nmu])
+estimate = np.zeros([Nx, Nmu])
 
 estimate = np.ones([Nx, Nmu]) * 2
+
+#estimate = np.array([[5,2],[10, 20]])
+
+
 #with h5py.File("rmc1e6noestimate.h5", "r") as f:
     #estimate = f["tally/flux/mean"][:]
 

@@ -1028,7 +1028,7 @@ def residual(
     residual_source=None,
     exponential_convergence=False,
     maxitt = 10,
-    tol = 1e-6,
+    tol = 1e-15,
     itt = 0,
     error = 0.0
 ):
