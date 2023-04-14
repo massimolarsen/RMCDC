@@ -52,7 +52,7 @@ hi = 1.0 / Nx
 hj = 2.0 / Nmu
 estimate = np.zeros([Nx, Nmu])
 
-estimate = np.ones([Nx, Nmu]) * 2
+#estimate = np.ones([Nx, Nmu]) * 2
 
 #estimate = np.array([[5,2],[10, 20]])
 

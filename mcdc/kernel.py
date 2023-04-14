@@ -1177,7 +1177,7 @@ def mesh_get_angular_index(P, mesh):
     uy = P["uy"]
     uz = P["uz"]
 
-    P_mu = ux
+    P_mu = uz
     P_azi = math.acos(ux / math.sqrt(ux * ux + uy * uy))
     if uy < 0.0:
         P_azi *= -1
@@ -2956,12 +2956,12 @@ def prepare_rmc_particles(mcdc):
                 P_new["w"] = -1 * P_new["w"]
 
         # isotropic y and z direction using mu
-        #P_new["ux"], P_new["uy"], P_new["uz"] = residual_isotropic_direction(mu, mcdc)
+        P_new["ux"], P_new["uy"], P_new["uz"] = residual_isotropic_direction(mu, mcdc)
         #P_new["uy"] = .5
         #P_new["ux"] = mu
 
         #P_new["ux"], P_new["uy"], P_new["uz"] = sample_isotropic_direction(mcdc)
-        P_new["ux"] = mu
+        #P_new["ux"] = mu
         P_new["x"] = x
 
         add_particle(P_new, mcdc["bank_source"])
