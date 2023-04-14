@@ -22,8 +22,8 @@ m2 = mcdc.material(
 )
 
 # Set surfaces
-s1 = mcdc.surface("plane-x", x=0.0, bc="reflective")
-s2 = mcdc.surface("plane-x", x=1.0, bc="reflective")
+s1 = mcdc.surface("plane-z", z=0.0, bc="reflective")
+s2 = mcdc.surface("plane-z", z=1.0, bc="reflective")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
 
 # Set cells
@@ -34,13 +34,13 @@ mcdc.cell([+s1, -s2], m1)
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nx = 2
+Nz = 2
 Nmu = 2
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    x=np.linspace(0.0, 1.0, Nx + 1),
+    z=np.linspace(0.0, 1.0, Nz + 1),
     mu=np.linspace(-1.0, 1.0, Nmu + 1)
 )
 
@@ -48,9 +48,9 @@ mcdc.tally(
 # Residual Parameters
 # =============================================================================
 
-hi = 1.0 / Nx
+hi = 1.0 / Nz
 hj = 2.0 / Nmu
-estimate = np.zeros([Nx, Nmu])
+estimate = np.zeros([Nz, Nmu])
 
 #estimate = np.ones([Nx, Nmu]) * 2
 
@@ -66,7 +66,7 @@ estimate = np.zeros([Nx, Nmu])
 #fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
 #fixed_source[0,0] = Nx*Nmu
 #fixed_source[0,1] = Nx*Nmu
-fixed_source = np.ones([Nx, Nmu])
+fixed_source = np.ones([Nz, Nmu])
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)

@@ -20,24 +20,24 @@ from mcdc.type_ import score_list
 @njit
 def sample_isotropic_direction(mcdc):
     # Sample polar cosine and azimuthal angle uniformly
-    mu = 2.0 * rng(mcdc) - 1.0
-    azi = 2.0 * PI * rng(mcdc)
+    mu = 2.0 * np.random.random() - 1.0
+    azi = 2.0 * PI * np.random.random()
 
     # Convert to Cartesian coordinates
     c = (1.0 - mu**2) ** 0.5
-    y = math.cos(azi) * c
-    z = math.sin(azi) * c
-    x = mu
+    x = math.cos(azi) * c
+    y = math.sin(azi) * c
+    z = mu
     return x, y, z
 
 
 @njit
 def sample_white_direction(nx, ny, nz, mcdc):
     # Sample polar cosine
-    mu = math.sqrt(rng(mcdc))
+    mu = math.sqrt(np.random.random())
 
     # Sample azimuthal direction
-    azi = 2.0 * PI * rng(mcdc)
+    azi = 2.0 * PI * np.random.random()
     cos_azi = math.cos(azi)
     sin_azi = math.sin(azi)
     Ac = (1.0 - mu**2) ** 0.5
@@ -63,14 +63,14 @@ def sample_white_direction(nx, ny, nz, mcdc):
 
 @njit
 def sample_uniform(a, b, mcdc):
-    return a + rng(mcdc) * (b - a)
+    return a + np.random.random() * (b - a)
 
 
 # TODO: use cummulative density function and binary search
 @njit
 def sample_discrete(p, mcdc):
     tot = 0.0
-    xi = rng(mcdc)
+    xi = np.random.random()
     for i in range(p.shape[0]):
         tot += p[i]
         if tot > xi:
@@ -79,7 +79,7 @@ def sample_discrete(p, mcdc):
 @njit
 def sample_discrete_2d(p, mcdc):
     tot = 0.0
-    xi = rng(mcdc)
+    xi = np.random.random()
     for i in range(p.shape[0]):
         for j in range(p.shape[1]):
             tot += p[i,j]
@@ -322,7 +322,7 @@ def manage_IC_bank(mcdc):
         # Sample and store to buffer
         for i in range(size_n):
             P = mcdc["technique"]["IC_bank_neutron_local"]["content"][i]
-            if rng(mcdc) < Pmax_n * P["w"]:
+            if np.random.random() < Pmax_n * P["w"]:
                 P["w"] = 1.0 / Pmax_n
                 buff_n[Nn] = P
                 Nn += 1
@@ -336,7 +336,7 @@ def manage_IC_bank(mcdc):
         # Sample and store to buffer
         for i in range(size_C):
             P = mcdc["technique"]["IC_bank_precursor_local"]["content"][i]
-            if rng(mcdc) < Pmax_C * P["w"]:
+            if np.random.random() < Pmax_C * P["w"]:
                 P["w"] = 1.0 / Pmax_C
                 buff_p[Np] = P
                 Np += 1
@@ -602,7 +602,7 @@ def bank_IC(P, mcdc):
         if Pn > mcdc["technique"]["IC_Pmax_n"]:
             mcdc["technique"]["IC_Pmax_n"] = Pn
 
-    if rng(mcdc) < Pn:
+    if np.random.random() < Pn:
         idx = mcdc["technique"]["IC_bank_neutron_local"]["size"]
         neutron = mcdc["technique"]["IC_bank_neutron_local"]["content"][idx]
         neutron["x"] = P["x"]
@@ -647,7 +647,7 @@ def bank_IC(P, mcdc):
         if Pp > mcdc["technique"]["IC_Pmax_C"]:
             mcdc["technique"]["IC_Pmax_C"] = Pp
 
-    if rng(mcdc) < Pp:
+    if np.random.random() < Pp:
         idx = mcdc["technique"]["IC_bank_precursor_local"]["size"]
         precursor = mcdc["technique"]["IC_bank_precursor_local"]["content"][idx]
         precursor["x"] = P["x"]
@@ -657,7 +657,7 @@ def bank_IC(P, mcdc):
         mcdc["technique"]["IC_bank_precursor_local"]["size"] += 1
 
         # Sample group
-        xi = rng(mcdc) * total
+        xi = np.random.random() * total
         total = 0.0
         for j in range(J):
             total += nu_d[j] / decay[j]
@@ -698,7 +698,7 @@ def pct_combing(mcdc):
     td = N / M
 
     # Tooth offset
-    xi = rng(mcdc)
+    xi = np.random.random()
     offset = xi * td
 
     # First hiting tooth
@@ -732,7 +732,7 @@ def pct_combing_weight(mcdc):
     td = W / M
 
     # Tooth offset
-    xi = rng(mcdc)
+    xi = np.random.random()
     offset = xi * td
 
     # First hiting tooth
@@ -1776,7 +1776,7 @@ def distance_to_collision(P, mcdc):
         return INF
 
     # Sample collision distance
-    xi = rng(mcdc)
+    xi = np.random.random()
     distance = -math.log(xi) / SigmaT
     return distance
 
@@ -1996,7 +1996,7 @@ def collision(P, mcdc):
         SigmaT -= SigmaC
 
     # Sample collision type
-    xi = rng(mcdc) * SigmaT
+    xi = np.random.random() * SigmaT
     tot = SigmaS
     if tot > xi:
         event = EVENT_SCATTERING
@@ -2044,7 +2044,7 @@ def scattering(P, mcdc):
     nu_s = material["nu_s"][g]
 
     # Get number of secondaries
-    N = int(math.floor(weight_eff * nu_s + rng(mcdc)))
+    N = int(math.floor(weight_eff * nu_s + np.random.random()))
 
     for n in range(N):
         # Create new particle
@@ -2075,7 +2075,7 @@ def sample_phasespace_scattering(P, material, P_new, mcdc):
     P_new["sensitivity_ID"] = P["sensitivity_ID"]
 
     # Sample outgoing energy
-    xi = rng(mcdc)
+    xi = np.random.random()
     tot = 0.0
     for g_out in range(G):
         tot += chi_s[g_out]
@@ -2084,10 +2084,10 @@ def sample_phasespace_scattering(P, material, P_new, mcdc):
     P_new["g"] = g_out
 
     # Sample scattering angle
-    mu = 2.0 * rng(mcdc) - 1.0
+    mu = 2.0 * np.random.random() - 1.0
 
     # Sample azimuthal direction
-    azi = 2.0 * PI * rng(mcdc)
+    azi = 2.0 * PI * np.random.random()
     cos_azi = math.cos(azi)
     sin_azi = math.sin(azi)
     Ac = (1.0 - mu**2) ** 0.5
@@ -2138,7 +2138,7 @@ def fission(P, mcdc):
         weight_new = P["w"]
 
     # Get number of secondaries
-    N = int(math.floor(weight_eff * nu / mcdc["k_eff"] + rng(mcdc)))
+    N = int(math.floor(weight_eff * nu / mcdc["k_eff"] + np.random.random()))
 
     for n in range(N):
         # Create new particle
@@ -2183,7 +2183,7 @@ def sample_phasespace_fission(P, material, P_new, mcdc):
     P_new["ux"], P_new["uy"], P_new["uz"] = sample_isotropic_direction(mcdc)
 
     # Prompt or delayed?
-    xi = rng(mcdc) * nu
+    xi = np.random.random() * nu
     tot = nu_p
     if xi < tot:
         prompt = True
@@ -2203,7 +2203,7 @@ def sample_phasespace_fission(P, material, P_new, mcdc):
                     decay = nuclide["decay"][j]
                     break
                 SigmaF = material["fission"][g]
-                xi = rng(mcdc) * nu_d[j] * SigmaF
+                xi = np.random.random() * nu_d[j] * SigmaF
                 tot = 0.0
                 for i in range(N_nuclide):
                     nuclide = mcdc["nuclides"][material["nuclide_IDs"][i]]
@@ -2217,7 +2217,7 @@ def sample_phasespace_fission(P, material, P_new, mcdc):
                 break
 
     # Sample outgoing energy
-    xi = rng(mcdc)
+    xi = np.random.random()
     tot = 0.0
     for g_out in range(G):
         tot += spectrum[g_out]
@@ -2227,7 +2227,7 @@ def sample_phasespace_fission(P, material, P_new, mcdc):
 
     # Sample emission time
     if not prompt:
-        xi = rng(mcdc)
+        xi = np.random.random()
         P_new["t"] -= math.log(xi) / decay
 
 
@@ -2253,7 +2253,7 @@ def sample_phasespace_fission_nuclide(P, nuclide, P_new, mcdc):
     P_new["ux"], P_new["uy"], P_new["uz"] = sample_isotropic_direction(mcdc)
 
     # Prompt or delayed?
-    xi = rng(mcdc) * nu
+    xi = np.random.random() * nu
     tot = nu_p
     if xi < tot:
         prompt = True
@@ -2270,7 +2270,7 @@ def sample_phasespace_fission_nuclide(P, nuclide, P_new, mcdc):
                 break
 
     # Sample outgoing energy
-    xi = rng(mcdc)
+    xi = np.random.random()
     tot = 0.0
     for g_out in range(G):
         tot += spectrum[g_out]
@@ -2280,7 +2280,7 @@ def sample_phasespace_fission_nuclide(P, nuclide, P_new, mcdc):
 
     # Sample emission time
     if not prompt:
-        xi = rng(mcdc)
+        xi = np.random.random()
         P_new["t"] -= math.log(xi) / decay
 
 
@@ -2317,11 +2317,11 @@ def branchless_collision(P, mcdc):
     # Set spectrum and decay rate
     fission = True
     prompt = True
-    if rng(mcdc) < n_scatter / n_total:
+    if np.random.random() < n_scatter / n_total:
         fission = False
         spectrum = material["chi_s"][g]
     else:
-        xi = rng(mcdc) * nu
+        xi = np.random.random() * nu
         tot = nu_p
         if xi < tot:
             spectrum = material["chi_p"][g]
@@ -2336,7 +2336,7 @@ def branchless_collision(P, mcdc):
 
     # Set time
     if not prompt:
-        xi = rng(mcdc)
+        xi = np.random.random()
         P["t"] -= math.log(xi) / decay
 
         # Kill if it's beyond time boundary
@@ -2345,7 +2345,7 @@ def branchless_collision(P, mcdc):
             return
 
     # Set energy
-    xi = rng(mcdc)
+    xi = np.random.random()
     tot = 0.0
     for g_out in range(G):
         tot += spectrum[g_out]
@@ -2395,14 +2395,14 @@ def weight_window(P, mcdc):
 
         # Russian roulette
         p -= n_split
-        xi = rng(mcdc)
+        xi = np.random.random()
         if xi <= p:
             add_particle(copy_particle(P), mcdc["bank_active"])
 
     # Below target
     else:
         # Russian roulette
-        xi = rng(mcdc)
+        xi = np.random.random()
         if xi > p:
             P["alive"] = False
 
@@ -2795,7 +2795,7 @@ def calculate_convergence_rate(mcdc):
 @njit
 def residual_isotropic_direction(mu, mcdc):
     # Sample polar cosine and azimuthal angle uniformly
-    azi = 2.0 * PI * rng(mcdc)
+    azi = 2.0 * PI * np.random.random()
 
     # Convert to Cartesian coordinates
     c = (1.0 - mu**2) ** 0.5
@@ -2843,7 +2843,7 @@ def prepare_rmc_source(mcdc):
     hi = mcdc["technique"]["residual_hi"]
     hj = mcdc["technique"]["residual_hj"]
     tally = mcdc["tally"]
-    x_mesh = tally["mesh"]["x"]
+    x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
     residual_estimate = mcdc["technique"]["residual_estimate"]
 
@@ -2892,7 +2892,7 @@ def prepare_rmc_particles(mcdc):
     hi = mcdc["technique"]["residual_hi"]
     hj = mcdc["technique"]["residual_hj"]
     tally = mcdc["tally"]
-    x_mesh = tally["mesh"]["x"]
+    x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
     N_particle = mcdc["setting"]["N_particle"]
     rii = mcdc["technique"]["residual_interior_integral"]
@@ -2934,9 +2934,9 @@ def prepare_rmc_particles(mcdc):
         # sampled location and angle
         if face: # face sampling
             if muj > 0:
-                x = xi - hi/2
+                z = xi - hi/2
             else:
-                x = xi + hi/2
+                z = xi + hi/2
             # angle
             eta = np.random.random()
             mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
@@ -2947,7 +2947,7 @@ def prepare_rmc_particles(mcdc):
         else: # interior sampling
             # location
             eta = np.random.random()
-            x = xi + hi*(eta-1/2)
+            z = xi + hi*(eta-1/2)
             # angle
             eta = np.random.random()
             mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
@@ -2956,13 +2956,14 @@ def prepare_rmc_particles(mcdc):
                 P_new["w"] = -1 * P_new["w"]
 
         # isotropic y and z direction using mu
-        P_new["ux"], P_new["uy"], P_new["uz"] = residual_isotropic_direction(mu, mcdc)
+        #P_new["ux"], P_new["uy"], P_new["uz"] = residual_isotropic_direction(mu, mcdc)
         #P_new["uy"] = .5
         #P_new["ux"] = mu
 
         #P_new["ux"], P_new["uy"], P_new["uz"] = sample_isotropic_direction(mcdc)
-        #P_new["ux"] = mu
-        P_new["x"] = x
+        
+        P_new["uz"] = mu
+        P_new["z"] = z
 
         add_particle(P_new, mcdc["bank_source"])
     return
@@ -2990,7 +2991,7 @@ def weight_roulette(P, mcdc):
 
     """
     chance = mcdc["technique"]["wr_chance"]
-    x = rng(mcdc)
+    x = np.random.random()
     if x <= chance:
         P["iqmc_w"] /= chance
         P["w"] /= chance
@@ -3064,7 +3065,7 @@ def sensitivity_surface(P, surface, material_ID_old, material_ID_new, mcdc):
     w_hat = p_total * flux
 
     # Sample source type
-    xi = rng(mcdc) * p_total
+    xi = np.random.random() * p_total
     tot = p_delta
     if tot > xi:
         # Delta source
@@ -3078,7 +3079,7 @@ def sensitivity_surface(P, surface, material_ID_old, material_ID_new, mcdc):
             w_hat *= total_scatter / p_scatter
 
             # Sample if it is from + or - component
-            if nuSigmaS_old > rng(mcdc) * total_scatter:
+            if nuSigmaS_old > np.random.random() * total_scatter:
                 sample_phasespace_scattering(P, material_old, P, mcdc)
                 P["w"] = w_hat * sign_old
             else:
@@ -3090,7 +3091,7 @@ def sensitivity_surface(P, surface, material_ID_old, material_ID_new, mcdc):
             w_hat *= total_fission / p_fission
 
             # Sample if it is from + or - component
-            if nuSigmaF_old > rng(mcdc) * total_fission:
+            if nuSigmaF_old > np.random.random() * total_fission:
                 sample_phasespace_fission(P, material_old, P, mcdc)
                 P["w"] = w_hat * sign_old
             else:
@@ -3110,7 +3111,7 @@ def sensitivity_material(P, mcdc):
     if N_nuclide == 1:
         nuclide = mcdc["nuclides"][material["nuclide_IDs"][0]]
     else:
-        xi = rng(mcdc) * SigmaT
+        xi = np.random.random() * SigmaT
         tot = 0.0
         for i in range(N_nuclide):
             nuclide = mcdc["nuclides"][material["nuclide_IDs"][i]]
@@ -3146,7 +3147,7 @@ def sensitivity_material(P, mcdc):
     P["w"] = total * P["w"] / SigmaT
 
     # Sample source type
-    xi = rng(mcdc) * total
+    xi = np.random.random() * total
     tot = SigmaT
     if tot > xi:
         # Delta source
