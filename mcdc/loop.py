@@ -96,7 +96,7 @@ def loop_main(mcdc):
 
             # set residual estimate to current flux
             N_particle = mcdc["setting"]["N_particle"]
-            mcdc["technique"]["residual_estimate"] = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle
+            mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle
 
 
         # Time census closeout

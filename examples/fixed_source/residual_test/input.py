@@ -7,9 +7,6 @@ import mcdc
 # =============================================================================
 # Set model
 # =============================================================================
-# Infinite medium with isotropic plane surface at the center
-# Based on Ganapol LA-UR-01-1854 (AZURV1 benchmark)
-# Effective scattering ratio c = 1.1
 
 # Set materials
 m1 = mcdc.material(
@@ -22,8 +19,8 @@ m2 = mcdc.material(
 )
 
 # Set surfaces
-s1 = mcdc.surface("plane-z", z=0.0, bc="reflective")
-s2 = mcdc.surface("plane-z", z=1.0, bc="reflective")
+s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
+s2 = mcdc.surface("plane-z", z=1.0, bc="vacuum")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
 
 # Set cells
@@ -50,9 +47,9 @@ mcdc.tally(
 
 hi = 1.0 / Nz
 hj = 2.0 / Nmu
-estimate = np.zeros([Nz, Nmu])
+#estimate = np.zeros([Nz, Nmu])
 
-#estimate = np.ones([Nx, Nmu]) * 2
+estimate = np.ones([Nz, Nmu]) * 6
 
 #estimate = np.array([[5,2],[10, 20]])
 
@@ -66,7 +63,7 @@ estimate = np.zeros([Nz, Nmu])
 #fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
 #fixed_source[0,0] = Nx*Nmu
 #fixed_source[0,1] = Nx*Nmu
-fixed_source = np.ones([Nz, Nmu])
+fixed_source = np.ones([Nz, Nmu]) * 5
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
