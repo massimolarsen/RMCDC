@@ -558,13 +558,14 @@ def make_type_technique(card):
     struct += [
         ("residual_hi", float64),
         ("residual_hj", float64),
-        ("residual_estimate", float64, (Nz, Nmu)),
-        ("residual_fixed_source", float64, (Nz, Nmu)),
-        ("residual_interior_integral", float64, (Nz, Nmu)),
-        ("residual_face_integral", float64, (Nz, Nmu)),
-        ("residual_face_residual", float64, (Nz, Nmu)),
-        ("residual_interior_residual", float64, (Nz, Nmu)),
-        ("residual_source", float64, (Nz, Nmu))
+        ("residual_hk", float64),
+        ("residual_estimate", float64, (Nx, Ny, N_azi)),
+        ("residual_fixed_source", float64, (Nx, Ny, N_azi)),
+        ("residual_interior_integral", float64, (Nx, Ny, N_azi)),
+        ("residual_face_integral", float64, (Nx, Ny, N_azi)),
+        ("residual_face_residual", float64, (Nx, Ny, N_azi)),
+        ("residual_interior_residual", float64, (Nx, Ny, N_azi)),
+        ("residual_source", float64, (Nx, Ny, N_azi))
     ]
 
     # Exponential convergence

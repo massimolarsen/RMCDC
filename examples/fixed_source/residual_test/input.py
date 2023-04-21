@@ -13,57 +13,44 @@ m1 = mcdc.material(
     capture=np.array([1.0])
 )
 
-m2 = mcdc.material(
-    capture=np.array([9.0/10.0]),
-    scatter=np.array([[1.0/10.0]])
-)
 
 # Set surfaces
-s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=1.0, bc="vacuum")
-#s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
+sx1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
+sx2 = mcdc.surface("plane-x", x=1.0, bc="vacuum")
+sy1 = mcdc.surface("plane-y", y=0.0, bc="vacuum")
+sy2 = mcdc.surface("plane-y", y=1.0, bc="vacuum")
+
 
 # Set cells
-mcdc.cell([+s1, -s2], m1)
-#mcdc.cell([+s2, -s3], m2)
+mcdc.cell([+sx1, -sx2, +sy1, -sy2], m1)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nz = 2
-Nmu = 2
+Nx = 2
+Ny = 2
+N_azi = 4
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    z=np.linspace(0.0, 1.0, Nz + 1),
-    mu=np.linspace(-1.0, 1.0, Nmu + 1)
+    x=np.linspace(0.0, 1.0, Nx + 1),
+    y=np.linspace(0.0, 1.0, Ny + 1),
+    azi=np.linspace(np.pi/4, 9*np.pi/4, N_azi + 1)
 )
 
 # =============================================================================
 # Residual Parameters
 # =============================================================================
 
-hi = 1.0 / Nz
-hj = 2.0 / Nmu
-#estimate = np.zeros([Nz, Nmu])
+hi = 1.0 / Nx
+hj = 1.0 / Ny
+hk = 2*np.pi / N_azi
 
-estimate = np.ones([Nz, Nmu]) * 6
+estimate = np.ones((Nx, Ny, N_azi)) * 1
 
-#estimate = np.array([[5,2],[10, 20]])
-
-
-#with h5py.File("rmc1e6noestimate.h5", "r") as f:
-    #estimate = f["tally/flux/mean"][:]
-
-#with h5py.File("output.h5", "r") as f:
-    #estimate = f["tally/flux/mean"][:]
-
-#fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
-#fixed_source[0,0] = Nx*Nmu
-#fixed_source[0,1] = Nx*Nmu
-fixed_source = np.ones([Nz, Nmu]) * 5
+fixed_source = np.ones((Nx, Ny, N_azi)) * 5
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
@@ -76,6 +63,7 @@ exponential_convergence = True
 mcdc.residual(
     hi=hi,
     hj=hj,
+    hk=hk,
     estimate=estimate,
     fixed_source=fixed_source,
     interior_integral=interior_integral,
