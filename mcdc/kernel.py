@@ -2841,7 +2841,7 @@ def prepare_rmc_source(mcdc):
 
     for i in range(len(x_mesh) - 1):
         xi = x_mesh[i] + hi/2
-        phi = np.sum(residual_estimate[i,:]) * 2 * np.pi
+        phi = np.sum(residual_estimate[i,:])
         
         for j in range(len(mu_mesh) - 1):
             muj = mu_mesh[j] + hj/2
@@ -2864,14 +2864,13 @@ def prepare_rmc_source(mcdc):
                     psi1 = residual_estimate[i-1,j]                 
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
-                    #psi1 = residual_estimate[i,1]
 
             else:
                 if i < len(x_mesh) - 2:
                     psi1 = residual_estimate[i+1,j]
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
-                    #psi1 = residual_estimate[i,0]
+                    #psi1 = 0
 
             # calculate residuals and integrals
             mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
@@ -2897,21 +2896,23 @@ def prepare_rmc_particles(mcdc):
 
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual_norm.shape)))
-    rL1 = (residual_norm / np.sum(residual_norm)).flatten()
-    rL1 = np.insert(rL1, 0, 0)
-    for i in range(1,len(rL1)):
-        rL1[i] += rL1[i-1]
+    residual_flattened = (residual_norm / np.sum(residual_norm)).flatten()
+    residual_flattened = np.insert(residual_flattened, 0, 0)
+    for i in range(1,len(residual_flattened)):
+        residual_flattened[i] += residual_flattened[i-1]
 
     for n in range(N_particle):
         # sample random cell with binary search
         eta = np.random.random()
-        index = binary_search(eta, rL1)
+        index = binary_search(eta, residual_flattened)
         cell_x = indices[index][0]
         cell_mu = indices[index][1]
 
         # create new particle with weight of residual source in the cell
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
-        P_new["w"] = residual_norm[cell_x, cell_mu]
+        P_new["w"] = np.sum(residual_norm)
+
+        asdf = np.sum(residual_norm)
 
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
@@ -2935,7 +2936,10 @@ def prepare_rmc_particles(mcdc):
                 mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
 
             # assign weight
-            if rfr[cell_x,cell_mu] < 0:
+            #if rfr[cell_x,cell_mu] < 0:
+                #P_new["w"] = -1 * P_new["w"]
+            
+            if rfr[cell_x,cell_mu]/muj*mu < 0:
                 P_new["w"] = -1 * P_new["w"]
 
         else: # interior sampling

@@ -10,7 +10,7 @@ import mcdc
 
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([1.0])
+    capture=np.array([3.0])
 )
 
 m2 = mcdc.material(
@@ -20,7 +20,7 @@ m2 = mcdc.material(
 
 # Set surfaces
 s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=1.0, bc="vacuum")
+s2 = mcdc.surface("plane-z", z=40.0, bc="vacuum")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
 
 # Set cells
@@ -37,7 +37,7 @@ Nmu = 2
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    z=np.linspace(0.0, 1.0, Nz + 1),
+    z=np.linspace(0.0, 40.0, Nz + 1),
     mu=np.linspace(-1.0, 1.0, Nmu + 1)
 )
 
@@ -47,11 +47,11 @@ mcdc.tally(
 
 hi = 1.0 / Nz
 hj = 2.0 / Nmu
-#estimate = np.zeros([Nz, Nmu])
+estimate = np.zeros([Nz, Nmu])
 
-estimate = np.ones([Nz, Nmu]) * 6
+#estimate = np.ones([Nz, Nmu]) * 4
 
-#estimate = np.array([[5,2],[10, 20]])
+#estimate = np.array([[6,0],[6,0],[6,0]])
 
 
 #with h5py.File("rmc1e6noestimate.h5", "r") as f:
