@@ -2937,7 +2937,7 @@ def prepare_rmc_particles(mcdc):
 
         # create new particle with weight of residual source in the cell
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
-        P_new["w"] = residual_norm[cell_x, cell_y, cell_azi]
+        P_new["w"] = np.sum(residual_norm)
 
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
