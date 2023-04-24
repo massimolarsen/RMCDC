@@ -2768,26 +2768,28 @@ def sample_qmc_group(sample, G):
 
 @njit
 def calculate_residual_error(mcdc):
-    N_particle = mcdc["setting"]["N_particle"]
-    flux_old = mcdc["technique"]["residual_estimate"]
-    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
+    flux_old = mcdc["technique"]["residual_estimate_old"]
+    flux_new = mcdc["technique"]["residual_estimate"]
+
     error = np.linalg.norm((flux_new - flux_old))
     mcdc["technique"]["residual_error"] = error
 
 def calculate_convergence_rate(mcdc):
-    N_particle = mcdc["setting"]["N_particle"]
-    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
-    flux_old = mcdc["technique"]["residual_estimate"]
-    #flux_real = np.ones([2,2])*5
+    flux_old = mcdc["technique"]["residual_estimate_old"]
+    flux_new = mcdc["technique"]["residual_estimate"]
+    
+    flux_real = np.ones([2,2])*5
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
 
-    #error = np.linalg.norm((flux_old - flux_real))
+    error = np.linalg.norm((flux_old - flux_real))
 
-    #error = abs((flux_new - flux_real)/flux_real) * 100
+    error = abs((flux_new - flux_real)/flux_real) * 100
 
-    #rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
+    rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
 
+    #print("-----------------------")
+    #print(rate)
     print("-----------------------")
     print(flux_new)
     print("------------------------")
@@ -2870,14 +2872,13 @@ def prepare_rmc_source(mcdc):
                     psi1 = residual_estimate[i+1,j]
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
-                    #psi1 = 0
 
             # calculate residuals and integrals
             mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
             mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, muj)
             mcdc["technique"]["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi, phi)
             mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hj, psi, psi1, muj)
-            mcdc["technique"]["residual_source"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
+            mcdc["technique"]["residual_norm"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
 
 @njit
 def prepare_rmc_particles(mcdc):
@@ -2892,7 +2893,7 @@ def prepare_rmc_particles(mcdc):
     rfi = mcdc["technique"]["residual_face_integral"]
     rir = mcdc["technique"]["residual_interior_residual"] 
     rfr = mcdc["technique"]["residual_face_residual"]
-    residual_norm = mcdc["technique"]["residual_source"]
+    residual_norm = mcdc["technique"]["residual_norm"]
 
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual_norm.shape)))
@@ -2908,11 +2909,10 @@ def prepare_rmc_particles(mcdc):
         cell_x = indices[index][0]
         cell_mu = indices[index][1]
 
-        # create new particle with weight of residual source in the cell
+        # create new particle with weight of residual source
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
         P_new["w"] = np.sum(residual_norm)
-
-        asdf = np.sum(residual_norm)
+        #P_new["w"] = np.sum(residual_norm) / hi / hj
 
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
@@ -2929,35 +2929,35 @@ def prepare_rmc_particles(mcdc):
         if face: # face sampling
             eta = np.random.random()
             if muj > 0:
-                z = xi - hi/2
+                x = xi - hi/2
                 mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2) 
             else:
-                z = xi + hi/2
+                x = xi + hi/2
                 mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
 
             # assign weight
-            #if rfr[cell_x,cell_mu] < 0:
-                #P_new["w"] = -1 * P_new["w"]
+            if rfr[cell_x,cell_mu] < 0:
+                P_new["w"] *= -1 
             
-            if rfr[cell_x,cell_mu]/muj*mu < 0:
-                P_new["w"] = -1 * P_new["w"]
+            #if rfr[cell_x,cell_mu]/muj*mu < 0:
+                #P_new["w"] *= -1 
 
         else: # interior sampling
             # location
             eta = np.random.random()
-            z = xi + hi*(eta-1/2)
+            x = xi + hi*(eta-1/2)
 
             # angle
             eta = np.random.random()
-            mu = (eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2))
+            mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
 
             # assign particle weight
             if rir[cell_x,cell_mu] < 0:
-                P_new["w"] = -1 * P_new["w"]
+                P_new["w"] *= -1
 
         # assign particle direction and location        
         P_new["uz"] = mu
-        P_new["z"] = z
+        P_new["z"] = x
 
         add_particle(P_new, mcdc["bank_source"])
     return

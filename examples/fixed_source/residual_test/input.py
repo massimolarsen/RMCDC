@@ -10,7 +10,7 @@ import mcdc
 
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([3.0])
+    capture=np.array([1.0])
 )
 
 m2 = mcdc.material(
@@ -20,7 +20,7 @@ m2 = mcdc.material(
 
 # Set surfaces
 s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=40.0, bc="vacuum")
+s2 = mcdc.surface("plane-z", z=100.0, bc="vacuum")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
 
 # Set cells
@@ -37,7 +37,7 @@ Nmu = 2
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    z=np.linspace(0.0, 40.0, Nz + 1),
+    z=np.linspace(0.0, 100.0, Nz + 1),
     mu=np.linspace(-1.0, 1.0, Nmu + 1)
 )
 
@@ -45,7 +45,7 @@ mcdc.tally(
 # Residual Parameters
 # =============================================================================
 
-hi = 1.0 / Nz
+hi = 100.0 / Nz
 hj = 2.0 / Nmu
 estimate = np.zeros([Nz, Nmu])
 
@@ -69,7 +69,7 @@ interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
 interior_residual = np.zeros_like(fixed_source)
 face_residual = np.zeros_like(fixed_source)
-residual_source = np.zeros_like(fixed_source)
+residual_norm = np.zeros_like(fixed_source)
 
 exponential_convergence = True
 
@@ -82,12 +82,12 @@ mcdc.residual(
     face_integral=face_integral,
     interior_residual=interior_residual,
     face_residual=face_residual,
-    residual_source=residual_source,
+    residual_norm=residual_norm,
     exponential_convergence=exponential_convergence
 )
 
 # Setting
-mcdc.setting(N_particle=1e4)
+mcdc.setting(N_particle=1e1)
 
 # Run
 mcdc.run()

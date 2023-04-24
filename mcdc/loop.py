@@ -82,6 +82,15 @@ def loop_main(mcdc):
         # RMC exponential convergence iteration
         elif mcdc["technique"]["exponential_convergence"]:
             mcdc["technique"]["residual_itt"] += 1
+
+             # set residual estimate to current flux
+            N_particle = mcdc["setting"]["N_particle"]
+            hi = mcdc["technique"]["residual_hi"]
+            hj = mcdc["technique"]["residual_hj"]
+            
+            mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
+
+
             # calculate error
             kernel.calculate_residual_error(mcdc)
             kernel.calculate_convergence_rate(mcdc)
@@ -93,11 +102,8 @@ def loop_main(mcdc):
 
             # Print progres
             # with objmode():
-
-            # set residual estimate to current flux
-            N_particle = mcdc["setting"]["N_particle"]
-            mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle
-
+            mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
+           
 
         # Time census closeout
         elif (

@@ -559,12 +559,13 @@ def make_type_technique(card):
         ("residual_hi", float64),
         ("residual_hj", float64),
         ("residual_estimate", float64, (Nz, Nmu)),
+        ("residual_estimate_old", float64, (Nz, Nmu)),
         ("residual_fixed_source", float64, (Nz, Nmu)),
         ("residual_interior_integral", float64, (Nz, Nmu)),
         ("residual_face_integral", float64, (Nz, Nmu)),
         ("residual_face_residual", float64, (Nz, Nmu)),
         ("residual_interior_residual", float64, (Nz, Nmu)),
-        ("residual_source", float64, (Nz, Nmu))
+        ("residual_norm", float64, (Nz, Nmu))
     ]
 
     # Exponential convergence
