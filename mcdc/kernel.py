@@ -2778,15 +2778,15 @@ def calculate_convergence_rate(mcdc):
     flux_old = mcdc["technique"]["residual_estimate_old"]
     flux_new = mcdc["technique"]["residual_estimate"]
     
-    flux_real = np.ones([2,2])*5
+    #flux_real = np.ones([2,2])*5
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
 
-    error = np.linalg.norm((flux_old - flux_real))
+    #error = np.linalg.norm((flux_old - flux_real))
 
-    error = abs((flux_new - flux_real)/flux_real) * 100
+    #error = abs((flux_new - flux_real)/flux_real) * 100
 
-    rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
+    #rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
 
     #print("-----------------------")
     #print(rate)
@@ -2912,7 +2912,6 @@ def prepare_rmc_particles(mcdc):
         # create new particle with weight of residual source
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
         P_new["w"] = np.sum(residual_norm)
-        #P_new["w"] = np.sum(residual_norm) / hi / hj
 
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
@@ -2920,7 +2919,7 @@ def prepare_rmc_particles(mcdc):
 
         # check if interior or face
         eta = np.random.random()
-        if eta < rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu]):
+        if eta < (rfi[cell_x,cell_mu]/(rii[cell_x,cell_mu]+rfi[cell_x,cell_mu])):
             face = True
         else:
             face = False
@@ -2929,14 +2928,14 @@ def prepare_rmc_particles(mcdc):
         if face: # face sampling
             eta = np.random.random()
             if muj > 0:
-                x = xi - hi/2
+                x = xi - hi/2 + SHIFT
                 mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2) 
             else:
-                x = xi + hi/2
+                x = xi + hi/2 - SHIFT
                 mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
 
             # assign weight
-            if rfr[cell_x,cell_mu] < 0:
+            if rfr[cell_x,cell_mu]+rir[cell_x,cell_mu] < 0:
                 P_new["w"] *= -1 
             
             #if rfr[cell_x,cell_mu]/muj*mu < 0:
@@ -2952,7 +2951,7 @@ def prepare_rmc_particles(mcdc):
             mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
 
             # assign particle weight
-            if rir[cell_x,cell_mu] < 0:
+            if rir[cell_x,cell_mu]+rfr[cell_x,cell_mu] < 0:
                 P_new["w"] *= -1
 
         # assign particle direction and location        

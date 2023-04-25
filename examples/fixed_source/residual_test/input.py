@@ -8,6 +8,8 @@ import mcdc
 # Set model
 # =============================================================================
 
+X = 1.0
+
 # Set materials
 m1 = mcdc.material(
     capture=np.array([1.0])
@@ -19,8 +21,8 @@ m2 = mcdc.material(
 )
 
 # Set surfaces
-s1 = mcdc.surface("plane-z", z=0.0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=100.0, bc="vacuum")
+s1 = mcdc.surface("plane-z", z=0, bc="vacuum")
+s2 = mcdc.surface("plane-z", z=X, bc="vacuum")
 #s3 = mcdc.surface("plane-x", x=2.0, bc="vacuum")
 
 # Set cells
@@ -31,13 +33,13 @@ mcdc.cell([+s1, -s2], m1)
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nz = 2
-Nmu = 2
+Nz = 10
+Nmu = 16
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    z=np.linspace(0.0, 100.0, Nz + 1),
+    z=np.linspace(0.0, X, Nz + 1),
     mu=np.linspace(-1.0, 1.0, Nmu + 1)
 )
 
@@ -45,11 +47,10 @@ mcdc.tally(
 # Residual Parameters
 # =============================================================================
 
-hi = 100.0 / Nz
+hi = X / Nz
 hj = 2.0 / Nmu
-estimate = np.zeros([Nz, Nmu])
 
-#estimate = np.ones([Nz, Nmu]) * 4
+estimate = np.ones([Nz, Nmu]) * 0
 
 #estimate = np.array([[6,0],[6,0],[6,0]])
 
@@ -63,6 +64,7 @@ estimate = np.zeros([Nz, Nmu])
 #fixed_source = np.zeros([Nx, Nmu]) * Nx * Nmu
 #fixed_source[0,0] = Nx*Nmu
 #fixed_source[0,1] = Nx*Nmu
+
 fixed_source = np.ones([Nz, Nmu]) * 5
 
 interior_integral = np.zeros_like(fixed_source)
@@ -87,7 +89,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e1)
+mcdc.setting(N_particle=1e4)
 
 # Run
 mcdc.run()
