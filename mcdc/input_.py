@@ -1021,12 +1021,13 @@ def residual(
     hj=None,
     hk=None,
     estimate=None,
+    estimate_old=None,
     fixed_source=None,
     interior_integral=None,
     face_integral=None,
     interior_residual=None,
     face_residual=None,
-    residual_source=None,
+    residual_norm=None,
     exponential_convergence=False,
     maxitt = 100,
     tol = 1e-15,
@@ -1039,12 +1040,13 @@ def residual(
     card["residual_hj"] = hj
     card["residual_hk"] = hk
     card["residual_estimate"] = estimate
+    card["residual_estimate_old"] = estimate_old
     card["residual_fixed_source"] = fixed_source
     card["residual_interior_integral"] = interior_integral
     card["residual_face_integral"] = face_integral
     card["residual_face_residual"] = face_residual
     card["residual_interior_residual"] = interior_residual
-    card["residual_source"] = residual_source
+    card["residual_norm"] = residual_norm
 
     card["exponential_convergence"] = exponential_convergence
     card["residual_maxitt"] = maxitt

@@ -8,6 +8,9 @@ import mcdc
 # Set model
 # =============================================================================
 
+X = 100.0
+Y = 100.0
+
 # Set materials
 m1 = mcdc.material(
     capture=np.array([1.0])
@@ -16,9 +19,9 @@ m1 = mcdc.material(
 
 # Set surfaces
 sx1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
-sx2 = mcdc.surface("plane-x", x=1.0, bc="vacuum")
+sx2 = mcdc.surface("plane-x", x=X, bc="vacuum")
 sy1 = mcdc.surface("plane-y", y=0.0, bc="vacuum")
-sy2 = mcdc.surface("plane-y", y=1.0, bc="vacuum")
+sy2 = mcdc.surface("plane-y", y=Y, bc="vacuum")
 
 
 # Set cells
@@ -35,20 +38,20 @@ N_azi = 4
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
     scores=["flux"],
-    x=np.linspace(0.0, 1.0, Nx + 1),
-    y=np.linspace(0.0, 1.0, Ny + 1),
-    azi=np.linspace(np.pi/4, 9*np.pi/4, N_azi + 1)
+    x=np.linspace(0.0, X, Nx + 1),
+    y=np.linspace(0.0, Y, Ny + 1),
+    azi=np.linspace(0, 2*np.pi, N_azi + 1)
 )
 
 # =============================================================================
 # Residual Parameters
 # =============================================================================
 
-hi = 1.0 / Nx
-hj = 1.0 / Ny
+hi = X / Nx
+hj = Y / Ny
 hk = 2*np.pi / N_azi
 
-estimate = np.ones((Nx, Ny, N_azi)) * 1
+estimate = np.ones((Nx, Ny, N_azi)) * 0
 
 fixed_source = np.ones((Nx, Ny, N_azi)) * 5
 
@@ -56,7 +59,7 @@ interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
 interior_residual = np.zeros_like(fixed_source)
 face_residual = np.zeros_like(fixed_source)
-residual_source = np.zeros_like(fixed_source)
+residual_norm = np.zeros_like(fixed_source)
 
 exponential_convergence = True
 
@@ -70,7 +73,7 @@ mcdc.residual(
     face_integral=face_integral,
     interior_residual=interior_residual,
     face_residual=face_residual,
-    residual_source=residual_source,
+    residual_norm=residual_norm,
     exponential_convergence=exponential_convergence
 )
 

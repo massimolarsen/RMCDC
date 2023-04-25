@@ -2768,17 +2768,16 @@ def sample_qmc_group(sample, G):
 
 @njit
 def calculate_residual_error(mcdc):
-    N_particle = mcdc["setting"]["N_particle"]
-    flux_old = mcdc["technique"]["residual_estimate"]
-    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
+    flux_old = mcdc["technique"]["residual_estimate_old"]
+    flux_new = mcdc["technique"]["residual_estimate"]
+
     error = np.linalg.norm((flux_new - flux_old))
     mcdc["technique"]["residual_error"] = error
 
 def calculate_convergence_rate(mcdc):
-    N_particle = mcdc["setting"]["N_particle"]
-    flux_new = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"])/N_particle
+    flux_old = mcdc["technique"]["residual_estimate_old"]
+    flux_new = mcdc["technique"]["residual_estimate"]
 
-    flux_old = mcdc["technique"]["residual_estimate"]
     #flux_real = np.ones([2,2])*5
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
@@ -2790,7 +2789,7 @@ def calculate_convergence_rate(mcdc):
     #rate = abs(flux_new - flux_real) / abs(flux_old - flux_real)
 
     print("-----------------------")
-    print(np.sum(flux_new, axis=2))
+    print(flux_new)
     print("------------------------")
     print(flux_old)
     print("-------------------------------")
@@ -2901,7 +2900,7 @@ def prepare_rmc_source(mcdc):
                 mcdc["technique"]["residual_face_residual"][i,j,k] = calculate_face_residual(psi, psi1, azi)
                 mcdc["technique"]["residual_interior_integral"][i,j,k] = calculate_interior_integral(hi, hj, hk, Q, SigmaS, SigmaT, psi, phi)
                 mcdc["technique"]["residual_face_integral"][i,j,k] = calculate_face_integral(h, hk, psi, psi1, azi)
-                mcdc["technique"]["residual_source"][i,j,k] = mcdc["technique"]["residual_interior_integral"][i,j,k] + mcdc["technique"]["residual_face_integral"][i,j,k]
+                mcdc["technique"]["residual_norm"][i,j,k] = mcdc["technique"]["residual_interior_integral"][i,j,k] + mcdc["technique"]["residual_face_integral"][i,j,k]
 
 @njit
 def prepare_rmc_particles(mcdc):
@@ -2918,7 +2917,7 @@ def prepare_rmc_particles(mcdc):
     rfi = mcdc["technique"]["residual_face_integral"]
     rir = mcdc["technique"]["residual_interior_residual"] 
     rfr = mcdc["technique"]["residual_face_residual"]
-    residual_norm = mcdc["technique"]["residual_source"]
+    residual_norm = mcdc["technique"]["residual_norm"]
 
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual_norm.shape)))
@@ -2986,7 +2985,7 @@ def prepare_rmc_particles(mcdc):
                 uy = np.sin(azi)
             # assign weight
             if rfr[cell_x, cell_y, cell_azi] < 0:
-                P_new["w"] = -1 * P_new["w"]
+                P_new["w"] *= -1
 
         else: # interior sampling
             # location
@@ -3002,7 +3001,7 @@ def prepare_rmc_particles(mcdc):
 
             # assign particle weight
             if rir[cell_x, cell_y, cell_azi] < 0:
-                P_new["w"] = -1 * P_new["w"]
+                P_new["w"] *= -1
 
         # assign particle direction and location        
         P_new["ux"] = ux
