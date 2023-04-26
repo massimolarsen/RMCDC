@@ -2778,11 +2778,11 @@ def calculate_convergence_rate(mcdc):
     flux_old = mcdc["technique"]["residual_estimate_old"]
     flux_new = mcdc["technique"]["residual_estimate"]
     
-    #flux_real = np.ones([2,2])*5
+    flux_real = np.ones([2,2])*5
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
 
-    #error = np.linalg.norm((flux_old - flux_real))
+    error = np.linalg.norm((flux_old - flux_real))
 
     #error = abs((flux_new - flux_real)/flux_real) * 100
 
@@ -2795,7 +2795,7 @@ def calculate_convergence_rate(mcdc):
     print("------------------------")
     print(flux_old)
     print("-------------------------------")
-    #print(error)
+    print(error)
 
     
 @njit
@@ -2840,11 +2840,11 @@ def prepare_rmc_source(mcdc):
     x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
     residual_estimate = mcdc["technique"]["residual_estimate"]
-
+    
     for i in range(len(x_mesh) - 1):
         xi = x_mesh[i] + hi/2
-        phi = np.sum(residual_estimate[i,:])
-        
+        phi = np.sum(residual_estimate[i,:]) * 2 * np.pi
+
         for j in range(len(mu_mesh) - 1):
             muj = mu_mesh[j] + hj/2
 
@@ -2866,12 +2866,12 @@ def prepare_rmc_source(mcdc):
                     psi1 = residual_estimate[i-1,j]                 
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
-
             else:
                 if i < len(x_mesh) - 2:
                     psi1 = residual_estimate[i+1,j]
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
+
 
             # calculate residuals and integrals
             mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)

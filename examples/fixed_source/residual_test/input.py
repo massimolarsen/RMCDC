@@ -8,11 +8,12 @@ import mcdc
 # Set model
 # =============================================================================
 
-X = 1.0
+X = 5.0
 
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([1.0])
+    capture=np.array([1.0]),
+    scatter=np.array([[5.0/10.0]])
 )
 
 m2 = mcdc.material(
@@ -33,8 +34,8 @@ mcdc.cell([+s1, -s2], m1)
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nz = 10
-Nmu = 16
+Nz = 2
+Nmu = 2
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
@@ -89,7 +90,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e4)
+mcdc.setting(N_particle=1e3)
 
 # Run
 mcdc.run()
