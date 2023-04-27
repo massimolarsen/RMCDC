@@ -2031,12 +2031,12 @@ def scattering(P, mcdc):
     P["alive"] = False
 
     # Get effective and new weight
-    if mcdc["technique"]["weighted_emission"]:
-        weight_eff = P["w"]
-        weight_new = 1.0
-    else:
-        weight_eff = 1.0
-        weight_new = P["w"]
+    #if mcdc["technique"]["weighted_emission"]:
+        #weight_eff = P["w"]
+        #weight_new = 1.0
+    #else:
+    weight_eff = 1.0
+    weight_new = P["w"]
 
     # Get production factor
     material = mcdc["materials"][P["material_ID"]]
@@ -2778,11 +2778,11 @@ def calculate_convergence_rate(mcdc):
     flux_old = mcdc["technique"]["residual_estimate_old"]
     flux_new = mcdc["technique"]["residual_estimate"]
     
-    flux_real = np.ones([2,2])*5
+    flux_real = np.ones([10,2])*5
     #with h5py.File("1e6particles20x2mu.h5", "r") as f:
         #flux_old = f["tally/flux/mean"][:]
 
-    error = np.linalg.norm((flux_old - flux_real))
+    #error = np.linalg.norm((flux_old - flux_real))
 
     #error = abs((flux_new - flux_real)/flux_real) * 100
 
@@ -2792,10 +2792,8 @@ def calculate_convergence_rate(mcdc):
     #print(rate)
     print("-----------------------")
     print(flux_new)
-    print("------------------------")
-    print(flux_old)
     print("-------------------------------")
-    print(error)
+    #print(error)
 
     
 @njit
@@ -2815,7 +2813,7 @@ def calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi):
 
 @njit
 def calculate_face_residual(psi, psi1, mu):
-    r = mu * (psi1 - psi)
+    r = abs(mu) * (psi1 - psi)
     return r
 
 @njit
@@ -2825,12 +2823,20 @@ def get_cell(x, mu, mcdc):
     for cell_ID in range(len(cells)):
         cell = mcdc["cells"][cell_ID]
         surfaces = cell["surface_IDs"]
-        if mu < 0:
-            if x >= surfaces[0] and x < surfaces[1]:
-                return cell["ID"]
-        else:
-            if x > surfaces[0] and x <= surfaces[1]:
-                return cell["ID"]
+
+        for j in range(len(surfaces)):
+            surface0 = mcdc["surfaces"][cell["surface_IDs"][0]]
+            surface1 = mcdc["surfaces"][cell["surface_IDs"][1]]
+
+            left = abs(surface0["J"][0][0])
+            right = abs(surface1["J"][0][0])
+
+            if mu < 0:
+                if x > left and x <= right:
+                    return cell["ID"]
+            else:
+                if x >= left and x < right:
+                    return cell["ID"]
 
 @njit
 def prepare_rmc_source(mcdc):
@@ -2871,6 +2877,7 @@ def prepare_rmc_source(mcdc):
                     psi1 = residual_estimate[i+1,j]
                 else:
                     psi1 = Q / (SigmaT - SigmaS)
+                    #psi1 = residual_estimate[i,1]
 
 
             # calculate residuals and integrals
@@ -2935,7 +2942,7 @@ def prepare_rmc_particles(mcdc):
                 mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
 
             # assign weight
-            if rfr[cell_x,cell_mu]+rir[cell_x,cell_mu] < 0:
+            if rfr[cell_x,cell_mu] < 0:
                 P_new["w"] *= -1 
             
             #if rfr[cell_x,cell_mu]/muj*mu < 0:
@@ -2951,7 +2958,7 @@ def prepare_rmc_particles(mcdc):
             mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
 
             # assign particle weight
-            if rir[cell_x,cell_mu]+rfr[cell_x,cell_mu] < 0:
+            if rir[cell_x,cell_mu] < 0:
                 P_new["w"] *= -1
 
         # assign particle direction and location        

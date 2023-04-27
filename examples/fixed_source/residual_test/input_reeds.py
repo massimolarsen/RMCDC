@@ -8,9 +8,11 @@ import mcdc
 # Set model
 # =============================================================================
 
+X = 6.0
+
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([1.1]),
+    capture=np.array([0.1]),
     scatter=np.array([[0.9]])
 )
 
@@ -19,30 +21,33 @@ m2 = mcdc.material(
 )
 
 m3 = mcdc.material(
-    capture=np.array([1.0])
+    capture=np.array([5.0])
 )
 
 m4 = mcdc.material(
-    capture=np.array([2.0])
+    capture=np.array([50.0])
 )
 
 # Set surfaces
 s1 = mcdc.surface("plane-z", z=0, bc="vacuum")
-s2 = mcdc.surface("plane-z", z=4.0)
-s3 = mcdc.surface("plane-z", z=6.0)
-s4 = mcdc.surface("plane-z", z=8.0, bc="vacuum")
+s2 = mcdc.surface("plane-z", z=2.0)
+s3 = mcdc.surface("plane-z", z=4.0)
+s4 = mcdc.surface("plane-z", z=5.0)
+s5 = mcdc.surface("plane-z", z=6.0)
+s6 = mcdc.surface("plane-z", z=8.0, bc="reflective")
 
 # Set cells
 mcdc.cell([+s1, -s2], m1)
-mcdc.cell([+s2, -s3], m4)
-mcdc.cell([+s3, -s4], m4)
-
+mcdc.cell([+s2, -s3], m1)
+mcdc.cell([+s3, -s4], m2)
+mcdc.cell([+s4, -s5], m3)
+mcdc.cell([+s5, -s6], m4)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nz = 10
+Nz = 80
 Nmu = 2
 
 # Tally: cell-average and cell-edge angular fluxes and currents
@@ -76,11 +81,11 @@ estimate = np.ones([Nz, Nmu]) * 0
 
 fixed_source = np.ones([Nz, Nmu]) * 0
 
-#for i in range(10):
-    #fixed_source[i+10,:] = 1
-    #fixed_source[i+30,:] = 50
+for i in range(20):
+    fixed_source[i+20,:] = 1/2
+    fixed_source[i+60,:] = 50/2
 
-fixed_source = np.ones([Nz, Nmu]) * 5
+#fixed_source = np.ones([Nz, Nmu]) * 1
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
@@ -104,7 +109,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e4)
+mcdc.setting(N_particle=1e5)
 
 # Run
 mcdc.run()

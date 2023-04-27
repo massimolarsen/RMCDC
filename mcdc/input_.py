@@ -1028,8 +1028,8 @@ def residual(
     face_residual=None,
     residual_norm=None,
     exponential_convergence=False,
-    maxitt = 100,
-    tol = 1e-12,
+    maxitt = 10,
+    tol = 0.1,
     itt = 0,
     error = 0.0
 ):
