@@ -109,7 +109,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e5)
+mcdc.setting(N_particle=1e4)
 
 # Run
 mcdc.run()
