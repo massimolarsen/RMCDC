@@ -1019,6 +1019,7 @@ def IC_generator(N_neutron=0, N_precursor=0):
 def residual(
     hi=None,
     hj=None,
+    ht=None,
     estimate=None,
     estimate_old=None,
     fixed_source=None,
@@ -1029,7 +1030,7 @@ def residual(
     residual_norm=None,
     exponential_convergence=False,
     maxitt = 10,
-    tol = 0.1,
+    tol = 1e-12,
     itt = 0,
     error = 0.0
 ):
@@ -1037,6 +1038,7 @@ def residual(
     card["residual"] = True
     card["residual_hi"] = hi
     card["residual_hj"] = hj
+    card["residual_ht"] = ht
     card["residual_estimate"] = estimate
     card["residual_estimate_old"] = estimate_old
     card["residual_fixed_source"] = fixed_source

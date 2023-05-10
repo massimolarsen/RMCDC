@@ -33,9 +33,30 @@ def loop_main(mcdc):
         if mcdc["technique"]["residual"]:
             # reset particle bank size
             mcdc["bank_source"]["size"] = 0
-            # prepare initial source
-            kernel.prepare_rmc_source(mcdc) 
-            kernel.prepare_rmc_particles(mcdc)
+
+            # build psi projection for the iteration
+            kernel.prepare_rmc_source(mcdc)
+
+            mcdc["technique"]["residual_timestep_next"] = mcdc["technique"]["residual_estimate"]
+            
+            if (
+                mcdc["technique"]["time_census"]
+                and mcdc["technique"]["census_idx"]
+                < len(mcdc["technique"]["census_time"]) - 1
+            ):
+                # prepare source ands sample particles
+                kernel.prepare_rmc_particles(mcdc)
+
+                #loop source
+                loop_source(mcdc)
+                
+                # Manage particle banks
+                kernel.manage_particle_banks(mcdc)
+
+                # Increment census index
+                mcdc["technique"]["census_idx"] += 1
+                
+            
             # reset flux
             mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
                 mcdc["tally"]["score"]["flux"]["mean"]
@@ -89,7 +110,6 @@ def loop_main(mcdc):
             hj = mcdc["technique"]["residual_hj"]
             
             mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
-
 
             # calculate error
             kernel.calculate_residual_error(mcdc)

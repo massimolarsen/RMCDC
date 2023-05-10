@@ -33,9 +33,9 @@ s3 = mcdc.surface("plane-z", z=6.0)
 s4 = mcdc.surface("plane-z", z=8.0, bc="vacuum")
 
 # Set cells
-mcdc.cell([+s1, -s2], m1)
-mcdc.cell([+s2, -s3], m4)
-mcdc.cell([+s3, -s4], m4)
+mcdc.cell([+s1, -s2], m3)
+mcdc.cell([+s2, -s3], m3)
+mcdc.cell([+s3, -s4], m3)
 
 
 # =============================================================================
@@ -44,12 +44,14 @@ mcdc.cell([+s3, -s4], m4)
 
 Nz = 10
 Nmu = 2
+Nt = 10
 
 # Tally: cell-average and cell-edge angular fluxes and currents
 mcdc.tally(
-    scores=["flux"],
+    scores=["flux", "flux-t"],
     z=np.linspace(0.0, 8.0, Nz + 1),
-    mu=np.linspace(-1.0, 1.0, Nmu + 1)
+    mu=np.linspace(-1.0, 1.0, Nmu + 1),
+    t=np.linspace(0.0, 10.0, Nt + 1)
 )
 
 # =============================================================================
@@ -58,8 +60,9 @@ mcdc.tally(
 
 hi = 8.0 / Nz
 hj = 2.0 / Nmu
+ht = 10.0 / Nt
 
-estimate = np.ones([Nz, Nmu]) * 0
+estimate = np.ones([Nz, Nmu, Nt]) * 0
 
 #estimate = np.array([[6,0],[6,0],[6,0]])
 
@@ -74,13 +77,13 @@ estimate = np.ones([Nz, Nmu]) * 0
 #fixed_source[0,0] = Nx*Nmu
 #fixed_source[0,1] = Nx*Nmu
 
-fixed_source = np.ones([Nz, Nmu]) * 0
+fixed_source = np.ones([Nz, Nmu, Nt]) * 0
 
 #for i in range(10):
     #fixed_source[i+10,:] = 1
     #fixed_source[i+30,:] = 50
 
-fixed_source = np.ones([Nz, Nmu]) * 5
+fixed_source = np.ones([Nz, Nmu, Nt]) * 5
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
@@ -93,6 +96,7 @@ exponential_convergence = True
 mcdc.residual(
     hi=hi,
     hj=hj,
+    ht=ht,
     estimate=estimate,
     fixed_source=fixed_source,
     interior_integral=interior_integral,
