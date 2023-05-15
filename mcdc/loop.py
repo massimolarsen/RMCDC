@@ -31,38 +31,58 @@ def loop_main(mcdc):
             )
 
         if mcdc["technique"]["residual"]:
-            # reset particle bank size
-            mcdc["bank_source"]["size"] = 0
+            for i in range(mcdc["technique"]["residual_maxitt"]):
+                # reset particle bank size
+                mcdc["bank_source"]["size"] = 0
 
-            # build psi projection for the iteration
-            kernel.prepare_rmc_source(mcdc)
-
-            mcdc["technique"]["residual_timestep_next"] = mcdc["technique"]["residual_estimate"]
-            
-            if (
-                mcdc["technique"]["time_census"]
-                and mcdc["technique"]["census_idx"]
-                < len(mcdc["technique"]["census_time"]) - 1
-            ):
-                # prepare source ands sample particles
+                # build psi projection for the iteration
+                kernel.prepare_rmc_source(mcdc)
+                
                 kernel.prepare_rmc_particles(mcdc)
 
-                #loop source
+                # run particles
                 loop_source(mcdc)
-                
-                # Manage particle banks
-                kernel.manage_particle_banks(mcdc)
 
+                a = mcdc["technique"]["time_census"]
+                b = mcdc["technique"]["census_idx"]
+                c = mcdc["technique"]["census_time"]
+                
+                # check convergence
+                if mcdc["technique"]["exponential_convergence"]:
+                    mcdc["technique"]["residual_itt"] = i
+
+                    # set residual estimate to current flux
+                    N_particle = mcdc["setting"]["N_particle"]
+                    hi = mcdc["technique"]["residual_hi"]
+                    hj = mcdc["technique"]["residual_hj"]
+                    
+                    mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
+
+                    a = mcdc["technique"]["residual_estimate"]
+
+                    # calculate error
+                    kernel.calculate_residual_error(mcdc)
+                    kernel.calculate_convergence_rate(mcdc)
+                    print_progress_residual(mcdc)
+                    if (mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]):
+                        break
+
+                    # Print progres
+                    # with objmode():
+                    mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
+                    # prepare source ands sample particles
+
+                # reset flux
+                mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
+                    mcdc["tally"]["score"]["flux"]["mean"]
+                )
+                
+
+            if (mcdc["technique"]["census_idx"] < 10):
                 # Increment census index
                 mcdc["technique"]["census_idx"] += 1
-                
-            
-            # reset flux
-            mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
-                mcdc["tally"]["score"]["flux"]["mean"]
-            )
-        # Loop over source particles
-        loop_source(mcdc)
+            else:
+                simulation_end = True
 
         # Eigenvalue cycle closeout
         if mcdc["setting"]["mode_eigenvalue"]:
@@ -99,30 +119,6 @@ def loop_main(mcdc):
             print_progress_iqmc(mcdc)
             # set flux_old = current flux
             mcdc["technique"]["iqmc_flux_old"] = mcdc["technique"]["iqmc_flux"].copy()
-
-        # RMC exponential convergence iteration
-        elif mcdc["technique"]["exponential_convergence"]:
-            mcdc["technique"]["residual_itt"] += 1
-
-             # set residual estimate to current flux
-            N_particle = mcdc["setting"]["N_particle"]
-            hi = mcdc["technique"]["residual_hi"]
-            hj = mcdc["technique"]["residual_hj"]
-            
-            mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
-
-            # calculate error
-            kernel.calculate_residual_error(mcdc)
-            kernel.calculate_convergence_rate(mcdc)
-            print_progress_residual(mcdc)
-            if (mcdc["technique"]["residual_itt"] == mcdc["technique"]["residual_maxitt"]) or (
-                mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]
-            ):
-                simulation_end = True
-
-            # Print progres
-            # with objmode():
-            mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
            
 
         # Time census closeout

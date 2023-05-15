@@ -185,6 +185,7 @@ def print_progress_residual(mcdc):
             itt = mcdc["technique"]["residual_itt"]
             error = mcdc["technique"]["residual_error"]
             print("\n*******************************")
-            print("Iteration: ", itt)
+            print("RMC Iteration: ", itt)
+            print("Time step: ", mcdc["technique"]["census_idx"])
             print("Error: ", error)
             print("*******************************\n")
