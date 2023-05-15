@@ -2855,8 +2855,9 @@ def prepare_rmc_source(mcdc):
     tally = mcdc["tally"]
     x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
-    residual_estimate = mcdc["technique"]["residual_estimate"]
     cell_t = mcdc["technique"]["census_idx"]
+    residual_estimate = mcdc["technique"]["residual_estimate"]
+
 
     for i in range(len(x_mesh) - 1): # space
         # get cell center value

@@ -31,6 +31,8 @@ def loop_main(mcdc):
             )
 
         if mcdc["technique"]["residual"]:
+            time_step = 0
+            max_time_step = 10
             for i in range(mcdc["technique"]["residual_maxitt"]):
                 # reset particle bank size
                 mcdc["bank_source"]["size"] = 0
@@ -78,12 +80,6 @@ def loop_main(mcdc):
                 )
                 
 
-            if (mcdc["technique"]["census_idx"] < 10):
-                # Increment census index
-                mcdc["technique"]["census_idx"] += 1
-            else:
-                simulation_end = True
-
         # Eigenvalue cycle closeout
         if mcdc["setting"]["mode_eigenvalue"]:
             # Tally history closeout
@@ -123,12 +119,9 @@ def loop_main(mcdc):
 
         # Time census closeout
         elif (
-            mcdc["technique"]["time_census"]
-            and mcdc["technique"]["census_idx"]
-            < len(mcdc["technique"]["census_time"]) - 1
+            mcdc["technique"]["census_idx"]
+            < 10
         ):
-            # Manage particle banks
-            kernel.manage_particle_banks(mcdc)
 
             # Increment census index
             mcdc["technique"]["census_idx"] += 1
@@ -179,14 +172,8 @@ def loop_source(mcdc):
         else:
             P = mcdc["bank_source"]["particles"][work_idx]
 
-        # Check if it is beyond
-        census_idx = mcdc["technique"]["census_idx"]
-        if P["t"] > mcdc["technique"]["census_time"][census_idx]:
-            P["t"] += SHIFT
-            kernel.add_particle(P, mcdc["bank_census"])
-        else:
-            # Add the source particle into the active bank
-            kernel.add_particle(P, mcdc["bank_active"])
+        # Add the source particle into the active bank
+        kernel.add_particle(P, mcdc["bank_active"])
 
         # =====================================================================
         # Run the source particle and its secondaries
