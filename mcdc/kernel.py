@@ -2768,6 +2768,7 @@ def sample_qmc_group(sample, G):
 
 @njit
 def calculate_residual_error(mcdc):
+    cell_t = mcdc["technique"]["residual_timestep"]
     flux_old = mcdc["technique"]["residual_estimate_old"]
     flux_new = mcdc["technique"]["residual_estimate"]
 
@@ -2775,6 +2776,7 @@ def calculate_residual_error(mcdc):
     mcdc["technique"]["residual_error"] = error
 
 def calculate_convergence_rate(mcdc):
+    cell_t = mcdc["technique"]["residual_timestep"]
     flux_old = mcdc["technique"]["residual_estimate_old"]
     flux_new = mcdc["technique"]["residual_estimate"]
     
@@ -2855,7 +2857,7 @@ def prepare_rmc_source(mcdc):
     tally = mcdc["tally"]
     x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
-    cell_t = mcdc["technique"]["census_idx"]
+    cell_t = mcdc["technique"]["residual_timestep"]
     residual_estimate = mcdc["technique"]["residual_estimate"]
 
 

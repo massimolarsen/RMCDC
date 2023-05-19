@@ -1028,11 +1028,14 @@ def residual(
     interior_residual=None,
     face_residual=None,
     residual_norm=None,
+    residual_total_timesteps=None,
+    flux_tally=None,
     exponential_convergence=False,
-    maxitt = 5,
-    tol = 1e-12,
+    maxitt = 10,
+    tol = 1e-6,
     itt = 0,
-    error = 0.0
+    error = 0.0,
+    timestep = 0
 ):
     card = mcdc.input_card.technique
     card["residual"] = True
@@ -1054,6 +1057,10 @@ def residual(
     card["residual_tol"] = tol
     card["residual_itt"] = itt
     card["residual_error"] = error
+
+    card["residual_timestep"] = timestep
+    card["residual_total_timesteps"] = residual_total_timesteps
+    card["residual_flux_tally"] = flux_tally
     return
 
 

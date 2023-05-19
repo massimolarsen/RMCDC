@@ -31,9 +31,8 @@ def loop_main(mcdc):
             )
 
         if mcdc["technique"]["residual"]:
-            time_step = 0
-            max_time_step = 10
             for i in range(mcdc["technique"]["residual_maxitt"]):
+                cell_t = mcdc["technique"]["residual_timestep"]
                 # reset particle bank size
                 mcdc["bank_source"]["size"] = 0
 
@@ -59,9 +58,20 @@ def loop_main(mcdc):
                     hj = mcdc["technique"]["residual_hj"]
                     
                     mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
+                    #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
 
-                    a = mcdc["technique"]["residual_estimate"]
+                    mcdc["technique"]["residual_flux_tally"] += np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj
 
+                    print("Current total tally")
+                    print(mcdc["technique"]["residual_flux_tally"])
+                    print("Current time tally")
+                    print(mcdc["technique"]["residual_estimate"])
+                    print("Current tally")
+                    print(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj)
+
+                    #mcdc["technique"]["residual_flux_tally"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
+                    
+                    #print(mcdc["technique"]["residual_flux_tally"])
                     # calculate error
                     kernel.calculate_residual_error(mcdc)
                     kernel.calculate_convergence_rate(mcdc)
@@ -119,15 +129,16 @@ def loop_main(mcdc):
 
         # Time census closeout
         elif (
-            mcdc["technique"]["census_idx"]
-            < 10
+            mcdc["technique"]["residual_timestep"] < mcdc["technique"]["residual_total_timesteps"] - 1
         ):
+            mcdc["technique"]["residual_estimate"] = np.zeros_like(mcdc["technique"]["residual_estimate"])
 
             # Increment census index
-            mcdc["technique"]["census_idx"] += 1
+            mcdc["technique"]["residual_timestep"] += 1
 
         # Fixed-source closeout
         else:
+            print(mcdc["technique"]["residual_flux_tally"])
             simulation_end = True
 
     # Tally closeout
@@ -172,8 +183,14 @@ def loop_source(mcdc):
         else:
             P = mcdc["bank_source"]["particles"][work_idx]
 
-        # Add the source particle into the active bank
-        kernel.add_particle(P, mcdc["bank_active"])
+        # Check if it is beyond
+        census_idx = mcdc["technique"]["census_idx"]
+        if P["t"] > mcdc["technique"]["census_time"][census_idx]:
+            P["t"] += SHIFT
+            kernel.add_particle(P, mcdc["bank_census"])
+        else:
+            # Add the source particle into the active bank
+            kernel.add_particle(P, mcdc["bank_active"])
 
         # =====================================================================
         # Run the source particle and its secondaries

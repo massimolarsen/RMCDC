@@ -51,7 +51,7 @@ mcdc.tally(
     scores=["flux"],
     z=np.linspace(0.0, 8.0, Nz + 1),
     mu=np.linspace(-1.0, 1.0, Nmu + 1),
-    t=np.linspace(0.0, 10.0, Nt + 1)
+    t=np.linspace(0.0, 5.0, Nt + 1)
 )
 
 # =============================================================================
@@ -60,7 +60,7 @@ mcdc.tally(
 
 hi = 8.0 / Nz
 hj = 2.0 / Nmu
-ht = 10.0 / Nt
+ht = 5.0 / Nt
 
 estimate = np.ones([Nz, Nmu]) * 0
 
@@ -84,16 +84,18 @@ fixed_source = np.ones([Nz, Nmu, Nt]) * 0
     #fixed_source[i+30,:] = 50
 
 fixed_source[:,:,0] = 5
-fixed_source[:,:,1] = 1
-fixed_source[:,:,2] = 4
-fixed_source[:,:,3] = 1
-fixed_source[:,:,4] = 5
+fixed_source[:,:,1] = 0
+fixed_source[:,:,2] = 0
+fixed_source[:,:,3] = 0
+fixed_source[:,:,4] = 0
 
 interior_integral = np.zeros_like(estimate)
 face_integral = np.zeros_like(estimate)
 interior_residual = np.zeros_like(estimate)
 face_residual = np.zeros_like(estimate)
 residual_norm = np.zeros_like(estimate)
+flux_tally = np.zeros_like(fixed_source)
+residual_total_timesteps = Nt
 
 exponential_convergence = True
 
@@ -108,7 +110,9 @@ mcdc.residual(
     interior_residual=interior_residual,
     face_residual=face_residual,
     residual_norm=residual_norm,
-    exponential_convergence=exponential_convergence
+    exponential_convergence=exponential_convergence,
+    residual_total_timesteps=residual_total_timesteps,
+    flux_tally=flux_tally
 )
 
 # Setting
