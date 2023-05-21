@@ -84,10 +84,10 @@ fixed_source = np.ones([Nz, Nmu, Nt]) * 0
     #fixed_source[i+30,:] = 50
 
 fixed_source[:,:,0] = 5
-fixed_source[:,:,1] = 0
-fixed_source[:,:,2] = 0
-fixed_source[:,:,3] = 0
-fixed_source[:,:,4] = 0
+fixed_source[:,:,1] = 4
+fixed_source[:,:,2] = 3
+fixed_source[:,:,3] = 2
+fixed_source[:,:,4] = 1
 
 interior_integral = np.zeros_like(estimate)
 face_integral = np.zeros_like(estimate)

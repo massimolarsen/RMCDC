@@ -60,14 +60,14 @@ def loop_main(mcdc):
                     mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
                     #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
 
-                    mcdc["technique"]["residual_flux_tally"] += np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj
+                    #mcdc["technique"]["residual_flux_tally"] += np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj
 
-                    print("Current total tally")
-                    print(mcdc["technique"]["residual_flux_tally"])
+                   #print("Current total tally")
+                    #print(mcdc["technique"]["residual_flux_tally"])
                     print("Current time tally")
                     print(mcdc["technique"]["residual_estimate"])
-                    print("Current tally")
-                    print(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj)
+                    #print("Current tally")
+                    #print(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj)
 
                     #mcdc["technique"]["residual_flux_tally"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
                     
@@ -88,7 +88,8 @@ def loop_main(mcdc):
                 mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
                     mcdc["tally"]["score"]["flux"]["mean"]
                 )
-                
+            mcdc["technique"]["residual_flux_tally"][:,:,cell_t] = mcdc["technique"]["residual_estimate"].copy()
+
 
         # Eigenvalue cycle closeout
         if mcdc["setting"]["mode_eigenvalue"]:
@@ -131,7 +132,7 @@ def loop_main(mcdc):
         elif (
             mcdc["technique"]["residual_timestep"] < mcdc["technique"]["residual_total_timesteps"] - 1
         ):
-            mcdc["technique"]["residual_estimate"] = np.zeros_like(mcdc["technique"]["residual_estimate"])
+            #mcdc["technique"]["residual_estimate"] = np.zeros_like(mcdc["technique"]["residual_estimate"])
 
             # Increment census index
             mcdc["technique"]["residual_timestep"] += 1
