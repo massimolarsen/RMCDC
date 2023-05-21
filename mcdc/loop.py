@@ -32,63 +32,65 @@ def loop_main(mcdc):
 
         if mcdc["technique"]["residual"]:
             for i in range(mcdc["technique"]["residual_maxitt"]):
+                mcdc["technique"]["residual_timestep"] = 0
                 cell_t = mcdc["technique"]["residual_timestep"]
+                timesteps = mcdc["technique"]["residual_total_timesteps"]
                 # reset particle bank size
                 mcdc["bank_source"]["size"] = 0
 
                 # build psi projection for the iteration
                 kernel.prepare_rmc_source(mcdc)
-                
-                kernel.prepare_rmc_particles(mcdc)
+
+                for j in range(timesteps):
+                    kernel.prepare_rmc_particles(mcdc)
+                    mcdc["technique"]["residual_timestep"] += 1
 
                 # run particles
                 loop_source(mcdc)
-
-                a = mcdc["technique"]["time_census"]
-                b = mcdc["technique"]["census_idx"]
-                c = mcdc["technique"]["census_time"]
                 
                 # check convergence
-                if mcdc["technique"]["exponential_convergence"]:
-                    mcdc["technique"]["residual_itt"] = i
+                mcdc["technique"]["residual_itt"] = i
 
-                    # set residual estimate to current flux
-                    N_particle = mcdc["setting"]["N_particle"]
-                    hi = mcdc["technique"]["residual_hi"]
-                    hj = mcdc["technique"]["residual_hj"]
-                    
-                    mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
-                    #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
+                # set residual estimate to current flux
+                N_particle = mcdc["setting"]["N_particle"]
+                hi = mcdc["technique"]["residual_hi"]
+                hj = mcdc["technique"]["residual_hj"]
+                
+                #mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
+                #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
 
-                    #mcdc["technique"]["residual_flux_tally"] += np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj
+                # rmc iteration solution, cell averaged
+                iteration_error = np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])
+                iteration_error *= 1/(N_particle * hi * hj / timesteps)
 
-                   #print("Current total tally")
-                    #print(mcdc["technique"]["residual_flux_tally"])
-                    print("Current time tally")
-                    print(mcdc["technique"]["residual_estimate"])
-                    #print("Current tally")
-                    #print(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj)
+                mcdc["technique"]["residual_estimate"] += iteration_error
 
-                    #mcdc["technique"]["residual_flux_tally"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
-                    
-                    #print(mcdc["technique"]["residual_flux_tally"])
-                    # calculate error
-                    kernel.calculate_residual_error(mcdc)
-                    kernel.calculate_convergence_rate(mcdc)
-                    print_progress_residual(mcdc)
-                    if (mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]):
-                        break
+                #print("Current total tally")
+                #print(mcdc["technique"]["residual_flux_tally"])
+                print("Current time tally")
+                #print(mcdc["technique"]["residual_estimate"])
+                #print("Current tally")
+                print(np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj* timesteps)
 
-                    # Print progres
-                    # with objmode():
-                    mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
-                    # prepare source ands sample particles
+                #mcdc["technique"]["residual_flux_tally"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
+                
+                #print(mcdc["technique"]["residual_flux_tally"])
+                # calculate error
+                kernel.calculate_residual_error(mcdc)
+                kernel.calculate_convergence_rate(mcdc)
+                print_progress_residual(mcdc)
+                if (mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]):
+                    break
+
+                # Print progres
+                # with objmode():
+                mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
+                # prepare source ands sample particles
 
                 # reset flux
                 mcdc["tally"]["score"]["flux"]["mean"] = np.zeros_like(
                     mcdc["tally"]["score"]["flux"]["mean"]
                 )
-            mcdc["technique"]["residual_flux_tally"][:,:,cell_t] = mcdc["technique"]["residual_estimate"].copy()
 
 
         # Eigenvalue cycle closeout
@@ -130,7 +132,7 @@ def loop_main(mcdc):
 
         # Time census closeout
         elif (
-            mcdc["technique"]["residual_timestep"] < mcdc["technique"]["residual_total_timesteps"] - 1
+            mcdc["technique"]["residual_timestep"] < 0
         ):
             #mcdc["technique"]["residual_estimate"] = np.zeros_like(mcdc["technique"]["residual_estimate"])
 
@@ -139,7 +141,6 @@ def loop_main(mcdc):
 
         # Fixed-source closeout
         else:
-            print(mcdc["technique"]["residual_flux_tally"])
             simulation_end = True
 
     # Tally closeout

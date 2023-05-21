@@ -1025,13 +1025,14 @@ def residual(
     fixed_source=None,
     interior_integral=None,
     face_integral=None,
+    time_integral=None,
     interior_residual=None,
     face_residual=None,
-    residual_norm=None,
+    time_residual=None,
+    residual_spatial_norm=None,
     residual_total_timesteps=None,
-    flux_tally=None,
     exponential_convergence=False,
-    maxitt = 10,
+    maxitt = 100,
     tol = 1e-6,
     itt = 0,
     error = 0.0,
@@ -1047,10 +1048,9 @@ def residual(
     card["residual_fixed_source"] = fixed_source
     card["residual_interior_integral"] = interior_integral
     card["residual_face_integral"] = face_integral
-    card["residual_face_residual"] = face_residual
     card["residual_interior_residual"] = interior_residual
-    card["residual_norm"] = residual_norm
-    
+    card["residual_face_residual"] = face_residual
+    card["residual_spatial_norm"] = residual_spatial_norm
 
     card["exponential_convergence"] = exponential_convergence
     card["residual_maxitt"] = maxitt
@@ -1060,7 +1060,9 @@ def residual(
 
     card["residual_timestep"] = timestep
     card["residual_total_timesteps"] = residual_total_timesteps
-    card["residual_flux_tally"] = flux_tally
+    card["residual_time_residual"] = time_residual
+    card["residual_time_integral"] = time_integral
+
     return
 
 

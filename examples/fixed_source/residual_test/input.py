@@ -62,7 +62,7 @@ hi = 8.0 / Nz
 hj = 2.0 / Nmu
 ht = 5.0 / Nt
 
-estimate = np.ones([Nz, Nmu]) * 0
+estimate = np.ones([Nz, Nmu, Nt]) * 0
 
 #estimate = np.array([[6,0],[6,0],[6,0]])
 
@@ -84,17 +84,17 @@ fixed_source = np.ones([Nz, Nmu, Nt]) * 0
     #fixed_source[i+30,:] = 50
 
 fixed_source[:,:,0] = 5
-fixed_source[:,:,1] = 4
-fixed_source[:,:,2] = 3
-fixed_source[:,:,3] = 2
-fixed_source[:,:,4] = 1
+fixed_source[:,:,1] = 5
+fixed_source[:,:,2] = 5
+fixed_source[:,:,3] = 5
+fixed_source[:,:,4] = 5
 
 interior_integral = np.zeros_like(estimate)
 face_integral = np.zeros_like(estimate)
 interior_residual = np.zeros_like(estimate)
 face_residual = np.zeros_like(estimate)
-residual_norm = np.zeros_like(estimate)
-flux_tally = np.zeros_like(fixed_source)
+residual_spatial_norm = np.zeros_like(estimate)
+
 residual_total_timesteps = Nt
 
 exponential_convergence = True
@@ -109,10 +109,9 @@ mcdc.residual(
     face_integral=face_integral,
     interior_residual=interior_residual,
     face_residual=face_residual,
-    residual_norm=residual_norm,
+    residual_spatial_norm=residual_spatial_norm,
     exponential_convergence=exponential_convergence,
-    residual_total_timesteps=residual_total_timesteps,
-    flux_tally=flux_tally
+    residual_total_timesteps=residual_total_timesteps
 )
 
 # Setting

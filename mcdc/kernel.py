@@ -2859,73 +2859,95 @@ def prepare_rmc_source(mcdc):
     mu_mesh = tally["mesh"]["mu"]
     cell_t = mcdc["technique"]["residual_timestep"]
     residual_estimate = mcdc["technique"]["residual_estimate"]
+    timesteps = mcdc["technique"]["residual_total_timesteps"]
 
+    for k in range(timesteps):
+        for i in range(len(x_mesh) - 1): # space
+            # get cell center value
+            xi = x_mesh[i] + hi/2
+            # get scalar flux
+            phi = np.sum(residual_estimate[i,:]) * 2 * np.pi
 
-    for i in range(len(x_mesh) - 1): # space
-        # get cell center value
-        xi = x_mesh[i] + hi/2
-        # get scalar flux
-        phi = np.sum(residual_estimate[i,:]) * 2 * np.pi
+            for j in range(len(mu_mesh) - 1): # angle
+                muj = mu_mesh[j] + hj/2
 
-        for j in range(len(mu_mesh) - 1): # angle
-            muj = mu_mesh[j] + hj/2
+                # get spatial cross sections
+                cell_ID = get_cell(xi, muj, mcdc)
+                cell = mcdc["cells"][cell_ID]
+                material_ID = cell["material_ID"]
+                material = mcdc["materials"][material_ID]
+                SigmaS = material["scatter"][0]
+                SigmaT = material["total"][0]
+                ####################### GET V FROM MATERIAL #########################
+                v = 1
 
-            # get spatial cross sections
-            cell_ID = get_cell(xi, muj, mcdc)
-            cell = mcdc["cells"][cell_ID]
-            material_ID = cell["material_ID"]
-            material = mcdc["materials"][material_ID]
-            SigmaS = material["scatter"][0]
-            SigmaT = material["total"][0]
-
-            # get source
-            Q = mcdc["technique"]["residual_fixed_source"][i,j,cell_t]
-            
-            # get previous estimate psi and or boundary conditions
-            psi = residual_estimate[i,j]
-            if muj > 0:
-                if i > 0:
-                    psi1 = residual_estimate[i-1,j]                 
+                # get source
+                Q = mcdc["technique"]["residual_fixed_source"][i,j,k]
+                
+                # get previous estimate psi or boundary conditions for space
+                psi = residual_estimate[i,j,k]
+                if muj > 0:
+                    if i > 0:
+                        psi_space1 = residual_estimate[i-1,j,k]
+                            
+                    else:
+                        psi_space1 = Q / (SigmaT - SigmaS)
                 else:
-                    psi1 = Q / (SigmaT - SigmaS)
-            else:
-                if i < len(x_mesh) - 2:
-                    psi1 = residual_estimate[i+1,j]
-                else:
-                    psi1 = Q / (SigmaT - SigmaS)
+                    if i < len(x_mesh) - 2:
+                        psi_space1 = residual_estimate[i+1,j,k]
+                    else:
+                        psi_space1 = Q / (SigmaT - SigmaS)
 
-            # calculate residuals and integrals
-            mcdc["technique"]["residual_interior_residual"][i,j] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
-            mcdc["technique"]["residual_face_residual"][i,j] = calculate_face_residual(psi, psi1, muj)
-            mcdc["technique"]["residual_interior_integral"][i,j] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi, phi)
-            mcdc["technique"]["residual_face_integral"][i,j] = calculate_face_integral(hj, psi, psi1, muj)
-            mcdc["technique"]["residual_norm"][i,j] = mcdc["technique"]["residual_interior_integral"][i,j] + mcdc["technique"]["residual_face_integral"][i,j]
+                # get previous estimate psi or boundary conditions for time
+                if k > 0: 
+                    psi_time1 = residual_estimate[i,j,k-1] 
+                else:
+                    psi_time1 = Q / (SigmaT - SigmaS)
+
+                # calculate residuals and integrals
+                mcdc["technique"]["residual_interior_residual"][i,j,k] = calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi)
+                mcdc["technique"]["residual_face_residual"][i,j,k] = calculate_face_residual(psi, psi_space1, muj)
+                mcdc["technique"]["residual_time_residual"][i,j,k] = calculate_time_residual(psi, psi_time1, v)
+                mcdc["technique"]["residual_interior_integral"][i,j,k] = calculate_interior_integral(hi, hj, Q, SigmaS, SigmaT, psi, phi)
+                mcdc["technique"]["residual_face_integral"][i,j,k] = calculate_face_integral(hj, psi, psi_space1, muj)
+                mcdc["technique"]["residual_time_integral"][i,j,k] = calculate_time_integral(hi, hj, psi, psi_time1, v)
+
+                mcdc["technique"]["residual_spatial_norm"][i,j,k] = (mcdc["technique"]["residual_interior_integral"][i,j,k] + 
+                                                             mcdc["technique"]["residual_face_integral"][i,j,k])
 
 @njit
 def prepare_rmc_particles(mcdc):
     # cell widths
     hi = mcdc["technique"]["residual_hi"]
     hj = mcdc["technique"]["residual_hj"]
+    ht = mcdc["technique"]["residual_ht"]
     # mesh
+    timesteps = mcdc["technique"]["residual_total_timesteps"]
     tally = mcdc["tally"]
     x_mesh = tally["mesh"]["z"]
     mu_mesh = tally["mesh"]["mu"]
+    t_mesh = tally["mesh"]["t"]
+    t = mcdc["technique"]["residual_timestep"]
     N_particle = mcdc["setting"]["N_particle"]
-    # residuals for current time step
-    face_integral = mcdc["technique"]["residual_face_integral"]
-    face_residual = mcdc["technique"]["residual_face_residual"]
-    interior_residual = mcdc["technique"]["residual_interior_residual"]
-    residual_norm = mcdc["technique"]["residual_norm"]
+
+    # residuals and integrals for current time step
+    face_integral =         mcdc["technique"]["residual_face_integral"][:,:,t]
+    time_integral =         mcdc["technique"]["residual_time_integral"][:,:,t]
+    face_residual =         mcdc["technique"]["residual_face_residual"][:,:,t]
+    interior_residual =     mcdc["technique"]["residual_interior_residual"][:,:,t]
+    time_residual =         mcdc["technique"]["residual_time_residual"][:,:,t]
+
+    residual_spatial_norm = mcdc["technique"]["residual_spatial_norm"][:,:,t]
 
     # get indices, flatten residual norm, and normalize for binary search
-    indices = np.array(list(np.ndindex(residual_norm.shape)))
-    residual_flattened = (residual_norm / np.sum(residual_norm)).flatten()
+    indices = np.array(list(np.ndindex(residual_spatial_norm.shape)))
+    residual_flattened = (residual_spatial_norm / np.sum(residual_spatial_norm)).flatten()
     residual_flattened = np.insert(residual_flattened, 0, 0)
     for i in range(1,len(residual_flattened)):
         residual_flattened[i] += residual_flattened[i-1]
 
     # loop over particles
-    for n in range(N_particle):
+    for n in range(int(N_particle/timesteps)):
         # sample random cell with binary search
         eta = np.random.random()
         index = binary_search(eta, residual_flattened)
@@ -2935,37 +2957,21 @@ def prepare_rmc_particles(mcdc):
         # get cell center values for x and mu
         xi = x_mesh[cell_x] + hi/2
         muj = mu_mesh[cell_mu] + hj/2
+        tk = t_mesh[t] + ht/2
 
         # create new particle
         P_new = np.zeros(1, dtype=type_.particle_record)[0]
 
         # set weight to residual source
-        P_new["w"] = np.sum(residual_norm)
+        P_new["w"] = np.sum(residual_spatial_norm + time_integral)
         
-
-        # check if interior or face
+        # check if time edge or interior
         eta = np.random.random()
-        if eta < (face_integral[cell_x,cell_mu]/(residual_norm[cell_x,cell_mu])):
-            face = True
-        else:
-            face = False
-        
-        # sampled location and angle
-        if face: # face sampling
-            eta = np.random.random()
-            if muj > 0:
-                x = xi - hi/2 + SHIFT
-                mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2) 
-            else:
-                x = xi + hi/2 - SHIFT
-                mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
+        if eta < time_integral[cell_x,cell_mu] / (time_integral[cell_x,cell_mu] + residual_spatial_norm[cell_x,cell_mu]):
+            # set particle time to t
+            P_new["t"] = t
 
-            # negative weight if residual is negative
-            if face_residual[cell_x,cell_mu] < 0:
-                P_new["w"] *= -1 
-
-        else: # interior sampling
-            # location
+            # space
             eta = np.random.random()
             x = xi + hi*(eta-1/2)
 
@@ -2973,9 +2979,44 @@ def prepare_rmc_particles(mcdc):
             eta = np.random.random()
             mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
 
-            # negative weight if residual is negative
-            if interior_residual[cell_x,cell_mu] < 0:
+            # negative weight if time residual is negative
+            if time_residual[cell_x,cell_mu] < 0:
                 P_new["w"] *= -1
+
+        else: # sample from interior
+
+            # sample random time within cell
+            eta = np.random.random()
+            P_new["t"] = tk + ht*(eta-1/2)
+
+            # check if spatial interior or face
+            eta = np.random.random()
+            # sampled location and angle
+            if eta < (face_integral[cell_x,cell_mu]/(residual_spatial_norm[cell_x,cell_mu])):
+                eta = np.random.random()
+                if muj > 0:
+                    x = xi - hi/2 + SHIFT
+                    mu = np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2) 
+                else:
+                    x = xi + hi/2 - SHIFT
+                    mu = -np.sqrt(eta * ((muj+hj/2)**2 - (muj-hj/2)**2) + (muj-hj/2)**2)
+
+                # negative weight if face residual is negative
+                if face_residual[cell_x,cell_mu] < 0:
+                    P_new["w"] *= -1 
+
+            else: # interior sampling
+                # location
+                eta = np.random.random()
+                x = xi + hi*(eta-1/2)
+
+                # angle
+                eta = np.random.random()
+                mu = eta * ((muj+hj/2) - (muj-hj/2)) + (muj-hj/2)
+
+                # negative weight if interior residual is negative
+                if interior_residual[cell_x,cell_mu] < 0:
+                    P_new["w"] *= -1
 
         # assign particle direction and location        
         P_new["uz"] = mu
