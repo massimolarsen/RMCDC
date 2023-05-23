@@ -19,7 +19,8 @@ m2 = mcdc.material(
 )
 
 m3 = mcdc.material(
-    capture=np.array([1.0])
+    capture=np.array([1.0]),
+    speed=np.array([1.0])
 )
 
 m4 = mcdc.material(
@@ -84,10 +85,10 @@ fixed_source = np.ones([Nz, Nmu, Nt]) * 0
     #fixed_source[i+30,:] = 50
 
 fixed_source[:,:,0] = 5
-fixed_source[:,:,1] = 5
-fixed_source[:,:,2] = 5
-fixed_source[:,:,3] = 5
-fixed_source[:,:,4] = 5
+fixed_source[:,:,1] = 0
+fixed_source[:,:,2] = 0
+fixed_source[:,:,3] = 0
+fixed_source[:,:,4] = 0
 
 interior_integral = np.zeros_like(estimate)
 face_integral = np.zeros_like(estimate)

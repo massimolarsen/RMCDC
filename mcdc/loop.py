@@ -55,13 +55,14 @@ def loop_main(mcdc):
                 N_particle = mcdc["setting"]["N_particle"]
                 hi = mcdc["technique"]["residual_hi"]
                 hj = mcdc["technique"]["residual_hj"]
+                hk = mcdc["technique"]["residual_ht"]
                 
                 #mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
                 #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
 
                 # rmc iteration solution, cell averaged
                 iteration_error = np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])
-                iteration_error *= 1/(N_particle * hi * hj / timesteps)
+                iteration_error *= 1/(N_particle * hi * hj * hk / timesteps)
 
                 mcdc["technique"]["residual_estimate"] += iteration_error
 
@@ -70,7 +71,7 @@ def loop_main(mcdc):
                 print("Current time tally")
                 #print(mcdc["technique"]["residual_estimate"])
                 #print("Current tally")
-                print(np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj* timesteps)
+                print(np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])/N_particle/hi/hj/hk*timesteps)
 
                 #mcdc["technique"]["residual_flux_tally"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj
                 
