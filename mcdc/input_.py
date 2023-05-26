@@ -1026,6 +1026,7 @@ def residual(
     interior_integral=None,
     face_integral=None,
     time_integral=None,
+    time_integral_next=None,
     interior_residual=None,
     face_residual=None,
     time_residual=None,
@@ -1062,6 +1063,7 @@ def residual(
     card["residual_total_timesteps"] = residual_total_timesteps
     card["residual_time_residual"] = time_residual
     card["residual_time_integral"] = time_integral
+    card["residual_time_integral_next"] = time_integral_next
 
     return
 

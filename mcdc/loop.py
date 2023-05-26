@@ -33,10 +33,8 @@ def loop_main(mcdc):
         if mcdc["technique"]["residual"]:
             timesteps = mcdc["technique"]["residual_total_timesteps"]
             for k in range(timesteps):
-                
 
                 for i in range(mcdc["technique"]["residual_maxitt"]):
-                    mcdc["technique"]["residual_timestep"] = 0
                     cell_t = mcdc["technique"]["residual_timestep"]
                     
                     # reset particle bank size
@@ -45,9 +43,7 @@ def loop_main(mcdc):
                     # build psi projection for the iteration
                     kernel.prepare_time_integral(mcdc)
                     kernel.prepare_rmc_source(mcdc)
-                    kernel.prepare_rmc_particles(mcdc)
-
-                    
+                    kernel.prepare_rmc_particles(mcdc)  
 
                     # run particles
                     loop_source(mcdc)
@@ -59,14 +55,15 @@ def loop_main(mcdc):
                     N_particle = mcdc["setting"]["N_particle"]
                     hi = mcdc["technique"]["residual_hi"]
                     hj = mcdc["technique"]["residual_hj"]
+                    hk = mcdc["technique"]["residual_ht"]
                     
                     #mcdc["technique"]["residual_estimate"] += np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)/N_particle/hi/hj
                     #mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]/N_particle/hi/hj
 
                     # rmc iteration solution, cell averaged
                     #iteration_error = np.moveaxis(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), [0], [2])
-                    iteration_error = np.sum(np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy()), axis=0)
-                    iteration_error *= 1/(N_particle * hi * hj)
+                    iteration_error = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())[cell_t,:,:]
+                    iteration_error *= 1/(N_particle * hi * hj * hk)
 
                     mcdc["technique"]["residual_estimate"][:,:,k] += iteration_error
 
@@ -97,7 +94,7 @@ def loop_main(mcdc):
                         mcdc["tally"]["score"]["flux"]["mean"]
                     )
 
-                    mcdc["technique"]["residual_timestep"] += 1
+                mcdc["technique"]["residual_timestep"] += 1
 
 
         # Eigenvalue cycle closeout
