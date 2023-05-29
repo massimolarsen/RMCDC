@@ -84,7 +84,7 @@ fixed_source = np.ones([Nz, Nmu, Nt]) * 0
     #fixed_source[i+10,:] = 1
     #fixed_source[i+30,:] = 50
 
-fixed_source[:,:,0] = 5
+fixed_source[:,:,0] = 0
 fixed_source[:,:,1] = 0
 fixed_source[:,:,2] = 0
 fixed_source[:,:,3] = 0

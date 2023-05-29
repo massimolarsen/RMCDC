@@ -2886,6 +2886,12 @@ def prepare_rmc_source(mcdc):
                 
                 # get previous estimate psi or boundary conditions for space
                 psi = residual_estimate[i,j,k]
+
+                if k < 4:
+                    psi_next = residual_estimate[i,j,k+1]
+                else: 
+                    psi_next = 0
+
                 if muj > 0:
                     if i > 0:
                         psi_space1 = residual_estimate[i-1,j,k]
@@ -2912,6 +2918,7 @@ def prepare_rmc_source(mcdc):
                 mcdc["technique"]["residual_interior_integral"][i,j,k] = calculate_interior_integral(hi, hj, hk, Q, SigmaS, SigmaT, psi, phi)
                 mcdc["technique"]["residual_face_integral"][i,j,k] = calculate_face_integral(hj, psi, psi_space1, muj)
                 mcdc["technique"]["residual_time_integral"][i,j,k] = calculate_time_integral(hi, hj, psi, psi_time1, v)
+                mcdc["technique"]["residual_time_integral_next"][i,j,k] = calculate_time_integral(hi, hj, psi_next, psi, v)
 
                 mcdc["technique"]["residual_spatial_norm"][i,j,k] = (mcdc["technique"]["residual_interior_integral"][i,j,k] + 
                                                              mcdc["technique"]["residual_face_integral"][i,j,k])
@@ -2934,11 +2941,13 @@ def prepare_rmc_particles(mcdc):
     # residuals and integrals for current time step
     face_integral =         mcdc["technique"]["residual_face_integral"][:,:,k]
     time_integral =         mcdc["technique"]["residual_time_integral"][:,:,k]
+    time_integral_next =    mcdc["technique"]["residual_time_integral_next"][:,:,k]
     face_residual =         mcdc["technique"]["residual_face_residual"][:,:,k]
     interior_residual =     mcdc["technique"]["residual_interior_residual"][:,:,k]
     time_residual =         mcdc["technique"]["residual_time_residual"][:,:,k]
     spatial_norm =          mcdc["technique"]["residual_spatial_norm"][:,:,k]
     
+    total_norm_next = spatial_norm + time_integral + time_integral_next
     total_norm = spatial_norm + time_integral
 
     # get indices, flatten residual norm, and normalize for binary search
@@ -2994,7 +3003,7 @@ def prepare_rmc_particles(mcdc):
             # check if spatial interior or face
             eta = np.random.random()
             # sampled location and angle
-            if eta < (face_integral[cell_x,cell_mu]/(spatial_norm[cell_x,cell_mu])):
+            if eta < face_integral[cell_x,cell_mu] / (spatial_norm[cell_x,cell_mu]):
                 eta = np.random.random()
                 if muj > 0:
                     x = xi - hi/2 + SHIFT

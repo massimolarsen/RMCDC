@@ -583,6 +583,7 @@ def make_type_technique(card):
         ("residual_timestep", int64),
         ("residual_total_timesteps", int64),
         ("residual_time_integral", float64, (Nz, Nmu, Nt)),
+        ("residual_time_integral_next", float64, (Nz, Nmu, Nt)),
         ("residual_time_residual", float64, (Nz, Nmu, Nt))
     ]
 
