@@ -2864,7 +2864,7 @@ def prepare_rmc_source(mcdc):
                 
                 # get psi
                 psi = residual_estimate[i,j,k]
-                if 7*np.pi/4 < azik or azik <= 1*np.pi/4: # right face
+                if -1*np.pi/4 < azik <= 1*np.pi/4: # right face
                     azi = np.cos(azik)
                     h = hj
                     if i > 0:
@@ -2872,7 +2872,7 @@ def prepare_rmc_source(mcdc):
                     else:
                         psi1 = Q / (SigmaT - SigmaS)
 
-                elif 3*np.pi/4 < azik <= 5*np.pi/4: # left face
+                elif 3*np.pi/4 < azik or azik <= -3*np.pi/4: # left face
                     azi = np.cos(azik)
                     h = hj
                     if i < len(x_mesh) - 2:
@@ -2888,7 +2888,7 @@ def prepare_rmc_source(mcdc):
                     else:
                         psi1 = Q / (SigmaT - SigmaS)
 
-                elif 5*np.pi/4 < azik <= 7*np.pi/4: # bottom face
+                elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
                     azi = np.sin(azik)
                     h = hi
                     if j < len(x_mesh) - 2:
@@ -2956,12 +2956,10 @@ def prepare_rmc_particles(mcdc):
             face = True
         else:
             face = False
-        
-
 
         # sampled location and angle
         if face: # face sampling
-            if 7*np.pi/4 < azik or azik <= 1*np.pi/4: # right face
+            if -1*np.pi/4 < azik <= 1*np.pi/4: # right face
                 # location
                 x = xi + hi/2 - SHIFT
                 eta = np.random.random()
@@ -2971,7 +2969,7 @@ def prepare_rmc_particles(mcdc):
                 azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
                 ux = np.cos(azi)
                 uy = np.sin(azi)
-            elif 3*np.pi/4 < azik <= 5*np.pi/4: # left face
+            elif 3*np.pi/4 < azik or azik <= -3*np.pi/4: # left face
                 # location
                 x = xi - hi/2 + SHIFT
                 eta = np.random.random()
@@ -2991,7 +2989,7 @@ def prepare_rmc_particles(mcdc):
                 azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
                 ux = np.cos(azi)
                 uy = np.sin(azi)
-            elif 5*np.pi/4 < azik <= 7*np.pi/4: # bottom face
+            elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
                 # location
                 eta = np.random.random()
                 x = xi + hi*(eta-1/2)
@@ -3027,18 +3025,15 @@ def prepare_rmc_particles(mcdc):
         P_new["y"] = y
 
         add_particle(P_new, mcdc["bank_source"])
-
-        if 7*np.pi/4 < azik or azik <= 1*np.pi/4: # right face
-            a+=1
-        elif 3*np.pi/4 < azik <= 5*np.pi/4: # left face
+        if -1*np.pi/4 < azik <= 1*np.pi/4: # right face
+                a+=1
+        elif 3*np.pi/4 < azik or azik <= -3*np.pi/4: # left face
             b+=1
         elif 1*np.pi/4 < azik <= 3*np.pi/4: # top face
-            c+=1
-        elif 5*np.pi/4 < azik <= 7*np.pi/4: # bottom face
-            d+=1
-        else: # interior sampling
             e+=1
-    print(a, b , c, d, e)
+        elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
+            d+=1
+    print(a, b , e, d)
     return
 
 # =============================================================================

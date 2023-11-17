@@ -40,7 +40,7 @@ mcdc.tally(
     scores=["flux"],
     x=np.linspace(0.0, X, Nx + 1),
     y=np.linspace(0.0, Y, Ny + 1),
-    azi=np.linspace(0, 2*np.pi, N_azi + 1)
+    azi=np.linspace(-np.pi, np.pi, N_azi + 1)
 )
 
 # =============================================================================
