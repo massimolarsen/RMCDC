@@ -88,6 +88,7 @@ def loop_main(mcdc):
             hi = mcdc["technique"]["residual_hi"]
             hj = mcdc["technique"]["residual_hj"]
             hk = mcdc["technique"]["residual_hk"]
+            tally = mcdc["tally"]["score"]["flux"]["mean"]
             mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj/hk
 
             # calculate error

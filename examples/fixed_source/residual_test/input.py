@@ -8,8 +8,8 @@ import mcdc
 # Set model
 # =============================================================================
 
-X = 100.0
-Y = 100.0
+X = 8.0
+Y = 8.0
 
 # Set materials
 m1 = mcdc.material(
@@ -51,7 +51,7 @@ hi = X / Nx
 hj = Y / Ny
 hk = 2*np.pi / N_azi
 
-estimate = np.ones((Nx, Ny, N_azi)) * 0
+estimate = np.ones((Nx, Ny, N_azi)) * 1
 
 fixed_source = np.ones((Nx, Ny, N_azi)) * 5
 
