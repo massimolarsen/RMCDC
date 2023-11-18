@@ -2960,21 +2960,21 @@ def prepare_rmc_particles(mcdc):
 
         # sampled location and angle
         if face: # face sampling
-            if 3*np.pi/4 < azik <= 5*np.pi/4: # left face
+            if 3*np.pi/4 < azik <= 5*np.pi/4: # right face
                 eta = np.random.random()
-                x = xi - hi/2 + SHIFT
+                x = xi + hi/2 - SHIFT
                 y = yj + hj*(eta-1/2)
-            elif 5*np.pi/4 < azik <= 7*np.pi/4: # bottom face
-                eta = np.random.random()
-                x = xi + hi*(eta-1/2)
-                y = yj - hj/2 + SHIFT
-            elif 1*np.pi/4 < azik <= 3*np.pi/4: # top face
+            elif 5*np.pi/4 < azik <= 7*np.pi/4: # top face
                 eta = np.random.random()
                 x = xi + hi*(eta-1/2)
                 y = yj + hj/2 - SHIFT
-            else: # right face
+            elif 1*np.pi/4 < azik <= 3*np.pi/4: # bottom face
                 eta = np.random.random()
-                x = xi + hi/2 - SHIFT
+                x = xi + hi*(eta-1/2)
+                y = yj - hj/2 + SHIFT
+            else: # left face
+                eta = np.random.random()
+                x = xi - hi/2 + SHIFT
                 y = yj + hj*(eta-1/2) 
                 
             # angle
