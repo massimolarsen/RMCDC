@@ -2791,8 +2791,8 @@ def calculate_convergence_rate(mcdc):
     print("-----------------------")
     print(flux_new)
     print("------------------------")
-    print(flux_old)
-    print("-------------------------------")
+    #print(flux_old)
+    #print("-------------------------------")
     #print(error)
 
     
@@ -2817,7 +2817,7 @@ def calculate_face_residual(psi, psi1, azi):
     return r
 
 @njit
-def get_cell(x, y, azi, mcdc):
+def get_cell(x, y, mcdc):
     cells = mcdc["cells"]
 
     for cell_ID in range(len(cells)):
@@ -2853,16 +2853,16 @@ def prepare_rmc_source(mcdc):
             yj = y_mesh[j] + hj/2
             phi = np.sum(residual_estimate[i,j,:]) * 2 * np.pi
 
+            # get cross sections
+            cell_ID = get_cell(xi, yj, mcdc)
+            cell = mcdc["cells"][cell_ID]
+            material_ID = cell["material_ID"]
+            material = mcdc["materials"][material_ID]
+            SigmaS = material["scatter"][0]
+            SigmaT = material["total"][0]
+
             for k in range(len(azi_mesh) - 1):
                 azik = azi_mesh[k] + hk/2
-
-                # get cross sections
-                cell_ID = get_cell(xi, yj, azik, mcdc)
-                cell = mcdc["cells"][cell_ID]
-                material_ID = cell["material_ID"]
-                material = mcdc["materials"][material_ID]
-                SigmaS = material["scatter"][0]
-                SigmaT = material["total"][0]
 
                 # get source
                 Q = mcdc["technique"]["residual_fixed_source"][i,j,k]
@@ -2896,7 +2896,7 @@ def prepare_rmc_source(mcdc):
                 elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
                     azi = np.sin(azik)
                     h = hi
-                    if j < len(x_mesh) - 2:
+                    if j < len(y_mesh) - 2:
                         psi1 = residual_estimate[i,j+1,k]
                     else:
                         psi1 = Q / (SigmaT - SigmaS)
@@ -2931,6 +2931,7 @@ def prepare_rmc_particles(mcdc):
     c= 0
     d= 0
     e= 0
+
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual_norm.shape)))
     residual_flattened = (residual_norm / np.sum(residual_norm)).flatten()
@@ -2965,45 +2966,33 @@ def prepare_rmc_particles(mcdc):
         # sampled location and angle
         if face: # face sampling
             if -1*np.pi/4 < azik <= 1*np.pi/4: # right face
-                # location
+                eta = np.random.random()
                 x = xi + hi/2 - SHIFT
-                eta = np.random.random()
                 y = yj + hj*(eta-1/2)
-                # angle
-                eta = np.random.random()
                 azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
-                ux = np.cos(azi)
-                uy = np.sin(azi)
-            elif 3*np.pi/4 < azik or azik <= -3*np.pi/4: # left face
-                # location
-                x = xi - hi/2 + SHIFT
-                eta = np.random.random()
-                y = yj + hj*(eta-1/2)
-                # angle
-                eta = np.random.random()
-                azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
-                ux = np.cos(azi)
-                uy = np.sin(azi)
-            elif 1*np.pi/4 < azik <= 3*np.pi/4: # top face
-                # location
-                eta = np.random.random()
-                x = xi + hi*(eta-1/2)
-                y = yj + hj/2 - SHIFT
-                # angle 
-                eta = np.random.random()
-                azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
-                ux = np.cos(azi)
-                uy = np.sin(azi)
             elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
-                # location
                 eta = np.random.random()
                 x = xi + hi*(eta-1/2)
                 y = yj - hj/2 + SHIFT
-                # angle
+                azi = -np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
+            elif 1*np.pi/4 < azik <= 3*np.pi/4: # top face
                 eta = np.random.random()
+                x = xi + hi*(eta-1/2)
+                y = yj + hj/2 - SHIFT
                 azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
-                ux = np.cos(azi)
-                uy = np.sin(azi)
+            else: # left face
+                eta = np.random.random()
+                x = xi - hi/2 + SHIFT
+                y = yj + hj*(eta-1/2) 
+                azi = np.sqrt(eta*((azik+hk/2)**2 - (azik-hk/2)**2) + (azik-hk/2)**2)
+            
+
+            # angle
+            eta = np.random.random()
+            
+            ux = np.cos(azi)
+            uy = np.sin(azi)
+
             # assign weight
             if rfr[cell_x, cell_y, cell_azi] < 0:
                 P_new["w"] *= -1
@@ -3038,7 +3027,7 @@ def prepare_rmc_particles(mcdc):
             e+=1
         elif -3*np.pi/4 < azik <= -1*np.pi/4: # bottom face
             d+=1
-    print(a, b , e, d)
+    print(a, b, e, d)
     return
 
 # =============================================================================

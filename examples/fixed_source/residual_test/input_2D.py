@@ -28,12 +28,20 @@ sx1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
 sx2 = mcdc.surface("plane-x", x=4.0)
 sx3 = mcdc.surface("plane-x", x=X, bc="vacuum")
 sy1 = mcdc.surface("plane-y", y=0.0, bc="vacuum")
-sy2 = mcdc.surface("plane-y", y=Y, bc="vacuum")
+sy2 = mcdc.surface("plane-y", y=4.0)
+sy3 = mcdc.surface("plane-y", y=Y, bc="vacuum")
 
 
 # Set cells
-mcdc.cell([+sx1, -sx2, +sy1, -sy2], m1)
-mcdc.cell([+sx2, -sx3, +sy1, -sy2], m2)
+
+# bottom left
+mcdc.cell([+sx1, -sx2, +sy1, -sy2], m2)
+# bottom right
+mcdc.cell([+sx2, -sx3, +sy1, -sy2], m1)
+# top left
+mcdc.cell([+sx1, -sx2, +sy2, -sy3], m1)
+# top right
+mcdc.cell([+sx2, -sx3, +sy2, -sy3], m1)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
