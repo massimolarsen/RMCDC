@@ -16,6 +16,7 @@ from mcdc.print_ import print_progress, print_progress_eigenvalue, print_progres
 @njit
 def loop_main(mcdc):
     simulation_end = False
+    cr = []
     while not simulation_end:
         if mcdc["technique"]["iQMC"]:
             # reset particle bank size
@@ -90,20 +91,22 @@ def loop_main(mcdc):
             hk = mcdc["technique"]["residual_hk"]
             tally = mcdc["tally"]["score"]["flux"]["mean"]
             mcdc["technique"]["residual_estimate"] += np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj/hk
-
+            error = np.squeeze(mcdc["tally"]["score"]["flux"]["mean"].copy())/N_particle/hi/hj/hk
+            cr.append(np.linalg.norm(error))
+            print(cr)
             # calculate error
-            kernel.calculate_residual_error(mcdc)
+            #kernel.calculate_residual_error(mcdc)
             kernel.calculate_convergence_rate(mcdc)
             print_progress_residual(mcdc)
             if (mcdc["technique"]["residual_itt"] == mcdc["technique"]["residual_maxitt"]) or (
-                mcdc["technique"]["residual_error"] <= mcdc["technique"]["residual_tol"]
+                np.linalg.norm(error) <= mcdc["technique"]["residual_tol"]
             ):
+                
                 simulation_end = True
 
             # Print progres
             # with objmode():
             mcdc["technique"]["residual_estimate_old"] = mcdc["technique"]["residual_estimate"].copy()
-
 
 
         # Time census closeout

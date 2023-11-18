@@ -18,6 +18,14 @@ m1 = mcdc.material(
 )
 
 m2 = mcdc.material(
+    capture=np.array([2.0]),
+    scatter=([[1.0]])
+)
+m3 = mcdc.material(
+    capture=np.array([3.0]),
+    scatter=([[0.0]])
+)
+m4 = mcdc.material(
     capture=np.array([4.0]),
     scatter=([[0.0]])
 )
@@ -26,7 +34,9 @@ m2 = mcdc.material(
 # Set surfaces
 sx1 = mcdc.surface("plane-x", x=0.0, bc="vacuum")
 sx2 = mcdc.surface("plane-x", x=4.0)
-sx3 = mcdc.surface("plane-x", x=X, bc="vacuum")
+#sx3 = mcdc.surface("plane-x", x=4.0)
+sx4 = mcdc.surface("plane-x", x=X, bc="vacuum")
+
 sy1 = mcdc.surface("plane-y", y=0.0, bc="vacuum")
 sy2 = mcdc.surface("plane-y", y=4.0)
 sy3 = mcdc.surface("plane-y", y=Y, bc="vacuum")
@@ -35,13 +45,17 @@ sy3 = mcdc.surface("plane-y", y=Y, bc="vacuum")
 # Set cells
 
 # bottom left
-mcdc.cell([+sx1, -sx2, +sy1, -sy2], m2)
+mcdc.cell([+sx1, -sx2, +sy1, -sy2], m1)
+# bottom mid
+mcdc.cell([+sx2, -sx4, +sy1, -sy2], m1)
 # bottom right
-mcdc.cell([+sx2, -sx3, +sy1, -sy2], m1)
+#mcdc.cell([+sx3, -sx4, +sy1, -sy2], m1)
 # top left
 mcdc.cell([+sx1, -sx2, +sy2, -sy3], m1)
+# top mid
+mcdc.cell([+sx2, -sx4, +sy2, -sy3], m1)
 # top right
-mcdc.cell([+sx2, -sx3, +sy2, -sy3], m1)
+#mcdc.cell([+sx3, -sx4, +sy2, -sy3], m2)
 
 # =============================================================================
 # Set tally, setting, and run mcdc
@@ -56,7 +70,7 @@ mcdc.tally(
     scores=["flux"],
     x=np.linspace(0.0, X, Nx + 1),
     y=np.linspace(0.0, Y, Ny + 1),
-    azi=np.linspace(-np.pi, np.pi, N_azi + 1)
+    azi=np.linspace(0, 2*np.pi, N_azi + 1)
 )
 
 # =============================================================================
@@ -67,9 +81,11 @@ hi = X / Nx
 hj = Y / Ny
 hk = 2*np.pi / N_azi
 
-estimate = np.ones((Nx, Ny, N_azi)) * 1
+estimate = np.ones((Nx, Ny, N_azi)) * 0
 
 fixed_source = np.ones((Nx, Ny, N_azi)) * 5
+
+
 
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
