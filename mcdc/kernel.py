@@ -2031,12 +2031,12 @@ def scattering(P, mcdc):
     P["alive"] = False
 
     # Get effective and new weight
-    if mcdc["technique"]["weighted_emission"]:
-        weight_eff = P["w"]
-        weight_new = 1.0
-    else:
-        weight_eff = 1.0
-        weight_new = P["w"]
+    #if mcdc["technique"]["weighted_emission"]:
+    #    weight_eff = P["w"]
+    #    weight_new = 1.0
+    #else:
+    weight_eff = 1.0
+    weight_new = P["w"]
 
     # Get production factor
     material = mcdc["materials"][P["material_ID"]]
@@ -2798,7 +2798,7 @@ def calculate_convergence_rate(mcdc):
     
 @njit
 def calculate_interior_integral(hi, hj, hk, Q, SigmaS, SigmaT, psi, phi):
-    r = hi * hj * hk * abs(Q + SigmaS/(4*np.pi)*phi - SigmaT*psi)
+    r = hi * hj * hk * abs(Q + SigmaS*psi - SigmaT*psi)
     return r
 
 @njit
@@ -2808,7 +2808,7 @@ def calculate_face_integral(h, hk, psi, psi1, azi):
 
 @njit
 def calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi):
-    r = Q + SigmaS/(4*np.pi)*phi - SigmaT*psi
+    r = Q + SigmaS*psi - SigmaT*psi
     return r
 
 @njit

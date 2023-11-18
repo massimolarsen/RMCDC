@@ -13,7 +13,8 @@ Y = 8.0
 
 # Set materials
 m1 = mcdc.material(
-    capture=np.array([1.0])
+    capture=np.array([2.0]),
+    scatter=([[1.0]])
 )
 
 
