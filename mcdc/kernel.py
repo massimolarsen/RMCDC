@@ -2821,14 +2821,19 @@ def get_cell(x, y, azi, mcdc):
     cells = mcdc["cells"]
 
     for cell_ID in range(len(cells)):
+        # get current cell surfaces
         cell = mcdc["cells"][cell_ID]
-        surfaces = cell["surface_IDs"]
-        if azi < 0:
-            if x >= surfaces[0] and x < surfaces[1]:
-                return cell["ID"]
-        else:
-            if x > surfaces[0] and x <= surfaces[1]:
-                return cell["ID"]
+        cell_surfaces = cell["surface_IDs"]
+        surfaces = mcdc["surfaces"]
+
+        # cell edges
+        left = abs(surfaces[cell_surfaces[0]]["J"][0][0])
+        right = abs(surfaces[cell_surfaces[1]]["J"][0][0])
+        bottom = abs(surfaces[cell_surfaces[2]]["J"][0][0])
+        top = abs(surfaces[cell_surfaces[3]]["J"][0][0])
+        
+        if left < x < right and bottom < y < top:
+            return cell["ID"]
 
 @njit
 def prepare_rmc_source(mcdc):
@@ -3026,7 +3031,7 @@ def prepare_rmc_particles(mcdc):
 
         add_particle(P_new, mcdc["bank_source"])
         if -1*np.pi/4 < azik <= 1*np.pi/4: # right face
-                a+=1
+            a+=1
         elif 3*np.pi/4 < azik or azik <= -3*np.pi/4: # left face
             b+=1
         elif 1*np.pi/4 < azik <= 3*np.pi/4: # top face
