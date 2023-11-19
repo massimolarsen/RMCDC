@@ -61,8 +61,8 @@ mcdc.cell([+sx2, -sx4, +sy2, -sy3], m1)
 # Set tally, setting, and run mcdc
 # =============================================================================
 
-Nx = 2
-Ny = 2
+Nx = 4
+Ny = 4
 N_azi = 4
 
 # Tally: cell-average and cell-edge angular fluxes and currents
@@ -108,7 +108,7 @@ mcdc.residual(
 )
 
 # Setting
-mcdc.setting(N_particle=1e4)
+mcdc.setting(N_particle=5*1e3)
 
 # Run
 mcdc.run()
