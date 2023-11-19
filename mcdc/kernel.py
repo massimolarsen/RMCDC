@@ -1237,7 +1237,6 @@ def score_tracklength(P, distance, mcdc):
     s = P["sensitivity_ID"]
     t, x, y, z, outside = mesh_get_index(P, tally["mesh"])
     mu, azi = mesh_get_angular_index(P, tally["mesh"])
-
     # Outside grid?
     if outside:
         return
@@ -2810,7 +2809,7 @@ def calculate_interior_residual(Q, SigmaS, SigmaT, psi, phi):
 
 @njit
 def calculate_face_residual(psi, psi1, azi):
-    r = azi * (psi1 - psi)
+    r = abs(azi) * (psi1 - psi)
     return r
 
 @njit
@@ -2968,77 +2967,26 @@ def prepare_rmc_particles(mcdc):
             ux = np.cos(azi)
             uy = np.sin(azi)
 
-            #if 3*np.pi/4 <= azi < 5*np.pi/4: # right face, going left
-            #    eta = np.random.random()
-            #    x = xi + hi/2 - SHIFT
-            #    y = yj + hj*(eta-1/2)
-            #    #a+=1
-            #elif 5*np.pi/4 <= azi < 7*np.pi/4: # top face, going down
-            #    eta = np.random.random()
-            #    x = xi + hi*(eta-1/2)
-            #    y = yj + hj/2 - SHIFT
-            #    #b+=1
-            #elif 1*np.pi/4 <= azi < 3*np.pi/4: # bottom face, going up
-            #    eta = np.random.random()
-            #    x = xi + hi*(eta-1/2)
-            #    y = yj - hj/2 + SHIFT
-            #    c+=1
-            #else: # left face, going right
-            #    eta = np.random.random()
-            #    x = xi - hi/2 + SHIFT
-            #    y = yj + hj*(eta-1/2) 
-            #    #d+=1
-                
-
-            if ux < 0 and uy < 0:
+            if 3*np.pi/4 <= azik < 5*np.pi/4: # right face, going left
                 eta = np.random.random()
-                if eta < 0.5:   # right face, going left
-                    eta = np.random.random()
-                    x = xi + hi/2 - SHIFT
-                    y = yj + hj*(eta-1/2)
-                    a+=1
-                else:           # top face, going down
-                    eta = np.random.random()
-                    x = xi + hi*(eta-1/2)
-                    y = yj + hj/2 - SHIFT
-                    b+=1
-            elif ux < 0 and uy > 0:
+                x = xi + (hi/2) - SHIFT
+                y = yj + hj*(eta-1/2)
+                #a+=1
+            elif 5*np.pi/4 <= azik < 7*np.pi/4: # top face, going down
                 eta = np.random.random()
-                if eta < 0.5:   # right face, going left
-                    eta = np.random.random()
-                    x = xi + hi/2 - SHIFT
-                    y = yj + hj*(eta-1/2)
-                    a+=1
-                else:           # bottom face, going up
-                    eta = np.random.random()
-                    x = xi + hi*(eta-1/2)
-                    y = yj - hj/2 + SHIFT
-                    c+=1
-            elif ux > 0 and uy < 0:
+                x = xi + hi*(eta-1/2)
+                y = yj + (hj/2) - SHIFT
+                #b+=1
+            elif 1*np.pi/4 <= azik < 3*np.pi/4: # bottom face, going up
                 eta = np.random.random()
-                if eta < 0.5:   # left face, going right
-                    eta = np.random.random()
-                    x = xi - hi/2 + SHIFT
-                    y = yj + hj*(eta-1/2) 
-                    d+=1
-                else:           # top face, going down
-                    eta = np.random.random()
-                    x = xi + hi*(eta-1/2)
-                    y = yj + hj/2 - SHIFT
-                    b+=1
-            elif ux > 0 and uy > 0:
+                x = xi + hi*(eta-1/2)
+                y = yj - (hj/2) + SHIFT
+                #c+=1
+            else: # left face, going right
                 eta = np.random.random()
-                if eta < 0.5:   # left face, going right
-                    eta = np.random.random()
-                    x = xi - hi/2 + SHIFT
-                    y = yj + hj*(eta-1/2) 
-                    d+=1
-                else:           # bottom face, going up
-                    eta = np.random.random()
-                    x = xi + hi*(eta-1/2)
-                    y = yj - hj/2 + SHIFT
-                    c+=1
-
+                x = xi - (hi/2) + SHIFT
+                y = yj + hj*(eta-1/2) 
+                #d+=1
 
             # assign weight
             if rfr[cell_x, cell_y, cell_azi] < 0:
@@ -3066,8 +3014,17 @@ def prepare_rmc_particles(mcdc):
         P_new["uy"] = uy
         P_new["x"] = x
         P_new["y"] = y
-
+        if ux > 0 and uy > 0:
+            a+=P_new["w"]
+        elif ux < 0 and uy > 0:
+            b+=P_new["w"]
+        elif ux < 0 and uy < 0:
+            c+=P_new["w"]
+        elif ux > 0 and uy < 0:
+            d += P_new["w"]
         add_particle(P_new, mcdc["bank_source"])
+        if P_new["w"] < 0:
+            continue
     print(a,b,c,d)
     return
 
