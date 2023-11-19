@@ -85,8 +85,6 @@ estimate = np.ones((Nx, Ny, N_azi)) * 0
 
 fixed_source = np.ones((Nx, Ny, N_azi)) * 5
 
-
-
 interior_integral = np.zeros_like(fixed_source)
 face_integral = np.zeros_like(fixed_source)
 interior_residual = np.zeros_like(fixed_source)

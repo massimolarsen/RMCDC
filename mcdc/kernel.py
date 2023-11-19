@@ -1180,7 +1180,7 @@ def mesh_get_angular_index(P, mesh):
     P_mu = uz
     P_azi = math.acos(ux / math.sqrt(ux * ux + uy * uy))
     if uy < 0.0:
-        P_azi = 2*np.pi-P_azi
+        P_azi = (2*np.pi) - (P_azi)
 
     mu = binary_search(P_mu, mesh["mu"])
     azi = binary_search(P_azi, mesh["azi"])
@@ -2866,9 +2866,8 @@ def prepare_rmc_source(mcdc):
                 
                 # get psi
                 psi = residual_estimate[i,j,k]
-                
 
-                if 3*np.pi/4 < azik <= 5*np.pi/4: # right face, going left
+                if 3*np.pi/4 <= azik < 5*np.pi/4: # right face, going left
                     azi = np.cos(azik)
                     h = hj
                     if i < len(x_mesh) - 2:
@@ -2876,7 +2875,7 @@ def prepare_rmc_source(mcdc):
                     else:
                         psi1 = Q / (SigmaT - SigmaS)
 
-                elif 1*np.pi/4 < azik <= 3*np.pi/4: # bottom face, going up
+                elif 1*np.pi/4 <= azik < 3*np.pi/4: # bottom face, going up
                     azi = np.sin(azik)
                     h = hi
                     if j > 0:
@@ -2884,7 +2883,7 @@ def prepare_rmc_source(mcdc):
                     else:
                         psi1 = Q / (SigmaT - SigmaS)
 
-                elif 5*np.pi/4 < azik <= 7*np.pi/4: # top face, going down
+                elif 5*np.pi/4 <= azik < 7*np.pi/4: # top face, going down
                     azi = np.sin(azik)
                     h = hi
                     if j < len(y_mesh) - 2:
@@ -2925,6 +2924,11 @@ def prepare_rmc_particles(mcdc):
     rfr = mcdc["technique"]["residual_face_residual"]
     residual_norm = mcdc["technique"]["residual_norm"]
 
+    a = 0
+    b = 0
+    c = 0
+    d = 0
+
     # get indices, flatten, and normalize for binary search
     indices = np.array(list(np.ndindex(residual_norm.shape)))
     residual_flattened = (residual_norm / np.sum(residual_norm)).flatten()
@@ -2964,23 +2968,78 @@ def prepare_rmc_particles(mcdc):
             ux = np.cos(azi)
             uy = np.sin(azi)
 
-            if 3*np.pi/4 < azi <= 5*np.pi/4: # right face, going left
-                eta = np.random.random()
-                x = xi + hi/2 - SHIFT
-                y = yj + hj*(eta-1/2)
-            elif 5*np.pi/4 < azi <= 7*np.pi/4: # top face, going down
-                eta = np.random.random()
-                x = xi + hi*(eta-1/2)
-                y = yj + hj/2 - SHIFT
-            elif 1*np.pi/4 < azi <= 3*np.pi/4: # bottom face, going up
-                eta = np.random.random()
-                x = xi + hi*(eta-1/2)
-                y = yj - hj/2 + SHIFT
-            else: # left face, going right
-                eta = np.random.random()
-                x = xi - hi/2 + SHIFT
-                y = yj + hj*(eta-1/2) 
+            #if 3*np.pi/4 <= azi < 5*np.pi/4: # right face, going left
+            #    eta = np.random.random()
+            #    x = xi + hi/2 - SHIFT
+            #    y = yj + hj*(eta-1/2)
+            #    #a+=1
+            #elif 5*np.pi/4 <= azi < 7*np.pi/4: # top face, going down
+            #    eta = np.random.random()
+            #    x = xi + hi*(eta-1/2)
+            #    y = yj + hj/2 - SHIFT
+            #    #b+=1
+            #elif 1*np.pi/4 <= azi < 3*np.pi/4: # bottom face, going up
+            #    eta = np.random.random()
+            #    x = xi + hi*(eta-1/2)
+            #    y = yj - hj/2 + SHIFT
+            #    c+=1
+            #else: # left face, going right
+            #    eta = np.random.random()
+            #    x = xi - hi/2 + SHIFT
+            #    y = yj + hj*(eta-1/2) 
+            #    #d+=1
                 
+
+            if ux < 0 and uy < 0:
+                eta = np.random.random()
+                if eta < 0.5:   # right face, going left
+                    eta = np.random.random()
+                    x = xi + hi/2 - SHIFT
+                    y = yj + hj*(eta-1/2)
+                    a+=1
+                else:           # top face, going down
+                    eta = np.random.random()
+                    x = xi + hi*(eta-1/2)
+                    y = yj + hj/2 - SHIFT
+                    b+=1
+            elif ux < 0 and uy > 0:
+                eta = np.random.random()
+                if eta < 0.5:   # right face, going left
+                    eta = np.random.random()
+                    x = xi + hi/2 - SHIFT
+                    y = yj + hj*(eta-1/2)
+                    a+=1
+                else:           # bottom face, going up
+                    eta = np.random.random()
+                    x = xi + hi*(eta-1/2)
+                    y = yj - hj/2 + SHIFT
+                    c+=1
+            elif ux > 0 and uy < 0:
+                eta = np.random.random()
+                if eta < 0.5:   # left face, going right
+                    eta = np.random.random()
+                    x = xi - hi/2 + SHIFT
+                    y = yj + hj*(eta-1/2) 
+                    d+=1
+                else:           # top face, going down
+                    eta = np.random.random()
+                    x = xi + hi*(eta-1/2)
+                    y = yj + hj/2 - SHIFT
+                    b+=1
+            elif ux > 0 and uy > 0:
+                eta = np.random.random()
+                if eta < 0.5:   # left face, going right
+                    eta = np.random.random()
+                    x = xi - hi/2 + SHIFT
+                    y = yj + hj*(eta-1/2) 
+                    d+=1
+                else:           # bottom face, going up
+                    eta = np.random.random()
+                    x = xi + hi*(eta-1/2)
+                    y = yj - hj/2 + SHIFT
+                    c+=1
+
+
             # assign weight
             if rfr[cell_x, cell_y, cell_azi] < 0:
                 P_new["w"] *= -1
@@ -2989,6 +3048,7 @@ def prepare_rmc_particles(mcdc):
             # location
             eta = np.random.random()
             x = xi + hi*(eta-1/2)
+            eta = np.random.random()
             y = yj + hj*(eta-1/2)
 
             # angle
@@ -3008,6 +3068,7 @@ def prepare_rmc_particles(mcdc):
         P_new["y"] = y
 
         add_particle(P_new, mcdc["bank_source"])
+    print(a,b,c,d)
     return
 
 # =============================================================================
