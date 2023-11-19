@@ -45,9 +45,9 @@ sy3 = mcdc.surface("plane-y", y=Y, bc="vacuum")
 # Set cells
 
 # bottom left
-mcdc.cell([+sx1, -sx2, +sy1, -sy2], m2)
+mcdc.cell([+sx1, -sx2, +sy1, -sy2], m1)
 # bottom mid
-mcdc.cell([+sx2, -sx4, +sy1, -sy2], m2)
+mcdc.cell([+sx2, -sx4, +sy1, -sy2], m1)
 # bottom right
 #mcdc.cell([+sx3, -sx4, +sy1, -sy2], m1)
 # top left
